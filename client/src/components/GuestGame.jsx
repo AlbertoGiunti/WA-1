@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Card, Button, Alert, Form, Badge, ProgressBar } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE = 'http://localhost:3002/api';
 
 function GuestGame() {
+  const navigate = useNavigate();
   const [structure, setStructure] = useState('');
   const [timeRemaining, setTimeRemaining] = useState(60);
   const [guessedLetters, setGuessedLetters] = useState([]);

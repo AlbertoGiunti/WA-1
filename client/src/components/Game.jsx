@@ -33,7 +33,7 @@ function Game({ user, setUser }) {
       timer = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
-            checkMatchStatus();
+            timeOut(); // Call timeOut when timer reaches 0
             return 0;
           }
           return prev - 1;
@@ -66,25 +66,34 @@ function Game({ user, setUser }) {
         setGameOver(true);
         setCorrectSentence(data.correctSentence);
         
-        // Handle penalty and coin balance safely
+        // Handle penalty and coin balance from server response
         const penalty = data.penalty || 0;
-        const newCoinBalance = data.newCoinBalance !== undefined ? data.newCoinBalance : (user.coins - penalty);
+        const newCoinBalance = data.newCoinBalance !== undefined ? data.newCoinBalance : Math.max(0, user.coins - penalty);
         
-        // Use server message if available, otherwise fallback
-        const message = data.message || `Time's up! You lost ${penalty} coins.`;
+        // Use server message which includes penalty information
+        const message = data.message || `Time's up! You lost ${penalty} coins. The correct sentence was revealed.`;
         setMessage(message);
         setMessageType('danger');
         
-        // Update user coins with the correct balance
+        // Update user coins with the server's calculated balance
         setUser(prev => ({ 
           ...prev, 
           coins: Math.max(0, newCoinBalance) // Ensure coins never go negative
         }));
+        
+        // Stop the timer
+        setTimeRemaining(0);
       }
     } catch (error) {
       console.error('Error checking match status:', error);
+      // Fallback timeout handling if server request fails
+      if (timeRemaining <= 0) {
+        setGameOver(true);
+        setMessage("Time's up! Connection error occurred.");
+        setMessageType('danger');
+      }
     }
-  }, [match, setUser, user.coins]);
+  }, [match, setUser, user.coins, timeRemaining]);
 
   const startNewMatch = async () => {
     try {
@@ -254,7 +263,39 @@ function Game({ user, setUser }) {
   const isVowel = (letter) => {
     return vowels.includes(letter.toUpperCase());
   };
+/*
+  const timeOut = async() => {
+    if (!match || timeRemaining > 0) return;
 
+    try {
+      const response = await fetch(`${API_BASE}/match/${match.id}/timeout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+      setGameOver(true);
+      setCorrectSentence(data.correctSentence);
+      
+      // Handle penalty and coin balance
+      const penalty = data.penalty || 0;
+      const newCoinBalance = data.newCoinBalance !== undefined ? data.newCoinBalance : Math.max(0, user.coins - penalty);
+      
+      setMessage(data.message || `Time's up! You lost ${penalty} coins. The correct sentence was revealed.`);
+      setMessageType('danger');
+      
+      // Update user coins
+      setUser(prev => ({ 
+        ...prev, 
+        coins: Math.max(0, newCoinBalance) 
+      }));
+      
+    } catch (error) {
+      setMessage('Error: time is ended');
+      setMessageType('danger');
+    }
+  };
+*/
   return (
     <div>
       <Card className="mb-3">
@@ -302,13 +343,26 @@ function Game({ user, setUser }) {
             <div className="text-center">
               <h5>Ready to play?</h5>
               <p>Each match costs coins to guess letters. Win by guessing the complete sentence!</p>
-              <Button 
-                variant="primary" 
-                onClick={startNewMatch}
-                disabled={(user.coins === undefined || user.coins === null || user.coins <= 0)}
-              >
-                {(user.coins === undefined || user.coins === null || user.coins <= 0) ? 'Not enough coins' : 'Start New Match'}
-              </Button>
+              <div className="d-flex gap-2 justify-content-center flex-wrap">
+                <Button 
+                  variant="primary" 
+                  onClick={startNewMatch}
+                  disabled={(user.coins === undefined || user.coins === null || user.coins <= 0)}
+                >
+                  {(user.coins === undefined || user.coins === null || user.coins <= 0) ? 'Not enough coins' : 'Start New Match'}
+                </Button>
+                <Button 
+                  variant="outline-secondary" 
+                  onClick={() => navigate('/')}
+                >
+                  Return to Home
+                </Button>
+              </div>
+              {(user.coins === undefined || user.coins === null || user.coins <= 0) && (
+                <p className="text-muted mt-2">
+                  You need coins to play. Try the guest mode or contact support.
+                </p>
+              )}
             </div>
           ) : (
             <div>

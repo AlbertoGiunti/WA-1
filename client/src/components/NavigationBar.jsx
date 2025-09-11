@@ -9,14 +9,7 @@ function NavigationBar({ user, onLogout }) {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <LinkContainer to="/">
-              <Nav.Link>Home</Nav.Link>
-            </LinkContainer>
-            {user ? (
-              <LinkContainer to="/game">
-                <Nav.Link>Play Game</Nav.Link>
-              </LinkContainer>
-            ) : (
+            {!user && (
               <LinkContainer to="/guest">
                 <Nav.Link>Guest Mode</Nav.Link>
               </LinkContainer>
