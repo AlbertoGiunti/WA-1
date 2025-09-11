@@ -1,42 +1,259 @@
+/* Global reset and base styles */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.App {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Bootstrap container adjustments */
+.container-fluid {
+  width: 100%;
+  max-width: 100%;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.row {
+  width: 100%;
+  margin: 0;
+}
+
+.col, .col-12, .col-sm-12, .col-md-8, .col-md-4, .col-lg-9, .col-lg-3 {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.letter-spacing {
+  letter-spacing: 0.1em;
+}
+
+.border-bottom {
+  display: inline-block;
+  min-width: 30px;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.navbar-brand {
+  font-weight: bold;
 }
 
 .card {
-  padding: 2em;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.read-the-docs {
-  color: #888;
+.progress {
+  height: 8px;
 }
+
+.badge {
+  font-size: 0.9em;
+}
+
+.font-monospace {
+  font-family: 'Courier New', monospace;
+}
+
+.btn {
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.alert {
+  border-radius: 8px;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 2px solid #dee2e6;
+}
+
+.text-primary {
+  color: #0d6efd !important;
+}
+
+.text-success {
+  color: #198754 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-warning {
+  color: #fd7e14 !important;
+}
+
+/* Custom styles for the game grid */
+.sentence-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  margin: 20px 0;
+}
+
+.letter-cell {
+  width: 40px;
+  height: 50px;
+  border: 2px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2em;
+  background: white;
+  border-radius: 4px;
+}
+
+.letter-cell.revealed {
+  background: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+.letter-cell.space {
+  border: none;
+  background: transparent;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .letter-cell {
+    width: 25px;
+    height: 35px;
+    font-size: 0.9em;
+    margin: 1px;
+  }
+  
+  .container-fluid {
+    padding: 5px;
+  }
+  
+  .navbar-brand {
+    font-size: 1rem;
+  }
+  
+  .card-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .card-header h5 {
+    font-size: 1.1rem;
+  }
+  
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+  }
+  
+  .progress {
+    width: 80px !important;
+  }
+  
+  .font-monospace {
+    font-size: 1rem;
+  }
+  
+  .mx-1 {
+    margin: 0 0.25rem !important;
+  }
+  
+  .border-bottom {
+    min-width: 25px;
+    padding: 0.25rem;
+  }
+  
+  .alert {
+    font-size: 0.875rem;
+  }
+  
+  .navbar-text {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .letter-cell {
+    width: 20px;
+    height: 30px;
+    font-size: 0.8em;
+    margin: 1px;
+  }
+  
+  .card-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .btn-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .progress {
+    width: 60px !important;
+  }
+  
+  .mx-1 {
+    margin: 0 0.1rem !important;
+  }
+  
+  .border-bottom {
+    min-width: 20px;
+    padding: 0.2rem;
+    font-size: 0.8rem;
+  }
+  
+  .container-fluid {
+    padding: 2px;
+  }
+  
+  .navbar-brand {
+    font-size: 0.9rem;
+  }
+}
+
+/* Animation for revealed letters */
+@keyframes letterReveal {
+  0% {
+    transform: scale(1);
+    background-color: #fff;
+  }
+  50% {
+    transform: scale(1.1);
+    background-color: #d4edda;
+  }
+  100% {
+    transform: scale(1);
+    background-color: #d4edda;
+  }
+}
+
+.letter-revealed {
+  animation: letterReveal 0.5s ease-in-out;
+}
+
+/* "Who in the world am I? Ah, that's the great puzzle!" - Alice in Wonderland */

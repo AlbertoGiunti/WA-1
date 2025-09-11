@@ -1,35 +1,99 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import NavigationBar from './components/NavigationBar';
+import Login from './components/Login';
+import Register from './components/Register';
+import Game from './components/Game';
+import GuestGame from './components/GuestGame';
+import Butterfly from './components/Butterfly';
+import { Container, Row, Col } from 'react-bootstrap';
+import './App.css';
+
+const API_BASE = 'http://localhost:3002/api';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user is already logged in
+    fetch(`${API_BASE}/user`, { credentials: 'include' })
+      .then(res => {
+        if (res.ok) return res.json();
+        throw new Error('Not authenticated');
+      })
+      .then(data => setUser(data.user))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE}/logout`, { 
+        method: 'POST', 
+        credentials: 'include' 
+      });
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+      setUser(null);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center mt-5">Loading...</div>;
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <Router>
+      <div className="App">
+        <NavigationBar user={user} onLogout={handleLogout} />
+        <Container fluid className="flex-grow-1 mt-3 px-2">
+          <Row className="h-100">
+            <Col lg={9} md={8} sm={12} className="h-100">
+              <Routes>
+                <Route 
+                  path="/login" 
+                  element={
+                    user ? <Navigate to="/game" /> : <Login onLogin={handleLogin} />
+                  } 
+                />
+                <Route 
+                  path="/register" 
+                  element={
+                    user ? <Navigate to="/game" /> : <Register onLogin={handleLogin} />
+                  } 
+                />
+                <Route 
+                  path="/game" 
+                  element={
+                    user ? <Game user={user} setUser={setUser} /> : <Navigate to="/login" />
+                  } 
+                />
+                <Route path="/guest" element={<GuestGame />} />
+                <Route 
+                  path="/" 
+                  element={
+                    user ? <Navigate to="/game" /> : <Navigate to="/guest" />
+                  } 
+                />
+              </Routes>
+            </Col>
+            <Col lg={3} md={4} className="d-none d-md-block h-100">
+              <Butterfly />
+            </Col>
+          </Row>
+        </Container>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </Router>
+  );
 }
 
-export default App
+export default App;
+
+// "Begin at the beginning," the King said gravely, "and go on till you come to the end: then stop." - Alice in Wonderland
