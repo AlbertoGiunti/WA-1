@@ -4,6 +4,7 @@ import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
 import morgan from 'morgan';
+import dayjs from 'dayjs';
 import { body, param, validationResult } from 'express-validator';
 
 import { setupPassport } from './auth.mjs';
@@ -125,6 +126,14 @@ app.get('/api/matches/current', isLoggedIn, async (req, res, next) => {
   try {
     const m = await currentMatch(req.user.id);
     if (!m) return res.json(null);
+    
+    // Check if match is expired without applying penalty
+    const now = dayjs().unix();
+    if (m.status === 'playing' && now > m.ends_at) {
+      // Match is expired, return null instead of applying penalty
+      return res.json(null);
+    }
+    
     res.json(await getMatchSafe(m));
   } catch (e) { next(e); }
 });

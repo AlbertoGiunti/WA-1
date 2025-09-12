@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Badge } from 'react-bootstrap';
 import { api } from '../api';
 import Grid from '../components/Grid.jsx';
@@ -28,6 +28,25 @@ export default function GuestPage() {
 
   const timeUp = secondsLeft === 0;
   const finished = match && (match.status !== 'playing' || timeUp);
+
+  // Handle automatic timeout
+  useEffect(() => {
+    if (match && match.status === 'playing' && timeUp) {
+      // When time runs out, fetch updated match status from server
+      const handleTimeout = async () => {
+        try {
+          const updatedMatch = await api.guestCurrent(match.id);
+          setMatch(updatedMatch);
+          if (updatedMatch.status === 'lost') {
+            setMsg('⏰ Time\'s up! Game Over!');
+          }
+        } catch (err) {
+          console.error('Error handling timeout:', err);
+        }
+      };
+      handleTimeout();
+    }
+  }, [match, timeUp]);
 
   const pick = async (L) => {
     if (!match || finished) return;

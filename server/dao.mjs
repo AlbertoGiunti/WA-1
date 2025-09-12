@@ -71,8 +71,11 @@ async function closeIfTimeout(m) {
   if (now <= m.ends_at) return m;
 
   if (m.user_id) {
-    const penalty = Math.min(TIME_PENALTY, m.remaining_coins ?? 0);
-    const newCoins = Math.max(0, (m.remaining_coins ?? 0) - penalty);
+    // Prendi i coins attuali dell'utente dalla tabella users
+    const currentCoins = await getUserCoins(m.user_id);
+    const penalty = Math.min(TIME_PENALTY, currentCoins);
+    const newCoins = Math.max(0, currentCoins - penalty);
+    
     await db.run('UPDATE users SET coins=? WHERE id=?', [newCoins, m.user_id]);
     await db.run('UPDATE matches SET status="lost", remaining_coins=? WHERE id=?', [newCoins, m.id]);
   } else {
@@ -88,7 +91,7 @@ export async function getMatchSafe(m) {
   const sentenceU = s.text.toUpperCase();
 
   const revealed = [...sentenceU].map((ch, i) => {
-    if (ch === ' ') return ' ';                             // spazi sempre ' '
+    if (ch === ' ') return null;                             // spazi sempre null
     return m.revealed_mask[i] === '1' ? ch : null;          // lettera rivelata vs non rivelata
   });
 
@@ -105,7 +108,7 @@ export async function getMatchSafe(m) {
     remainingCoins: m.remaining_coins,
     spaces: [...sentenceU].map(ch => ch === ' '),
     revealed,
-    fullSentence
+    sentence: fullSentence  /* Usa 'sentence' invece di "fullSentence" per il frontend */
   };
   
   return result;
