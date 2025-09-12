@@ -1,87 +1,90 @@
+// client/src/components/Butterfly.jsx
 import { useState, useEffect } from 'react';
-import { Card, Badge } from 'react-bootstrap';
+import { Card, Badge, Button } from 'react-bootstrap';
+import { api } from '../api';
 
-const API_BASE = 'http://localhost:3002/api';
+function freqColor(f) {
+  // euristica: frequenze alte = più “calde”
+  if (f >= 10) return 'danger';     // vowels tipicamente
+  if (f >= 6)  return 'warning';    // high
+  if (f >= 2)  return 'info';       // medium
+  return 'secondary';               // low
+}
 
-function Butterfly() {
+export default function Butterfly() {
   const [letters, setLetters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState('');
 
-  useEffect(() => {
-    fetchRandomLetters();
-  }, []);
-
-  const fetchRandomLetters = async () => {
+  const load = async () => {
+    setLoading(true); setErr('');
     try {
-      const response = await fetch(`${API_BASE}/letters/random`);
-      const data = await response.json();
-      setLetters(data);
-    } catch (error) {
-      console.error('Error fetching random letters:', error);
+      const data = await api.getButterfly(); // [{letter,frequency,cost}]
+      // normalizza lettera in UPPERCASE per coerenza col resto dell'app
+      setLetters(data.map(x => ({ ...x, letter: String(x.letter).toUpperCase() })));
+    } catch (e) {
+      setErr(e.message || 'Error fetching random letters');
     } finally {
       setLoading(false);
     }
   };
 
-  const getFrequencyColor = (frequency) => {
-    if (frequency >= 10) return 'danger'; // Vowels
-    if (frequency >= 4) return 'warning'; // High frequency consonants
-    if (frequency >= 2) return 'info'; // Medium frequency
-    return 'secondary'; // Low frequency
-  };
-
-  const getFrequencyLabel = (frequency) => {
-    if (frequency >= 10) return 'Vowel';
-    if (frequency >= 4) return 'High';
-    if (frequency >= 2) return 'Medium';
-    return 'Low';
-  };
+  useEffect(() => { load(); }, []);
 
   return (
-    <Card className="h-100">
+    <Card className="h-100 shadow-sm border-0">
       <Card.Header className="text-center">
-        <h5 className="mb-0">🦋 Letter Frequencies</h5>
+        <div className="d-flex align-items-center justify-content-between">
+          <h5 className="mb-0 w-100 text-center">🦋 Letter Frequencies</h5>
+        </div>
       </Card.Header>
-      <Card.Body className="p-2">
+
+      <Card.Body className="p-3">
+        {err && <div className="text-danger text-center mb-2 small">{err}</div>}
         {loading ? (
           <div className="text-center">Loading letters...</div>
         ) : (
-          <div className="d-flex flex-wrap gap-1 justify-content-center">
-            {letters.map((letter, index) => (
-              <div key={index} className="text-center" style={{minWidth: '45px'}}>
-                <Badge 
-                  bg={getFrequencyColor(letter.frequency)} 
-                  className="fs-6 p-1 mb-1 d-block"
-                  style={{ fontSize: '0.75rem' }}
-                >
-                  {letter.letter}
-                </Badge>
-                <div className="small text-muted" style={{fontSize: '0.65rem'}}>
-                  {letter.frequency}
+          <>
+            <div className="d-flex flex-wrap gap-2 justify-content-center">
+              {letters.map((it, idx) => (
+                <div key={idx} className="text-center" style={{ minWidth: 54 }}>
+                  <Badge
+                    bg={freqColor(it.frequency)}
+                    className="fs-5 p-2 mb-1 d-block"
+                    title={`Cost: ${it.cost}`}
+                  >
+                    {it.letter}
+                  </Badge>
+                  <div className="small text-muted" style={{ fontSize: '0.7rem' }}>
+                    {it.frequency}
+                  </div>
+                  <div className="small" style={{ fontSize: '0.7rem' }}>
+                    cost: <strong>{it.cost}</strong>
+                  </div>
                 </div>
-                <div className="small text-muted" style={{fontSize: '0.6rem'}}>
-                  {getFrequencyLabel(letter.frequency)}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            <div className="text-center mt-3">
+              <Button size="sm" variant="outline-secondary" onClick={load}>
+                Refresh
+              </Button>
+            </div>
+          </>
         )}
-        <hr className="my-2" />
-        <div className="small text-muted" style={{fontSize: '0.7rem'}}>
-          <strong>Letter Costs:</strong>
+
+        <hr className="my-3" />
+        <div className="small text-muted" style={{ fontSize: '0.8rem' }}>
+          <strong>Legend:</strong>
           <div className="mt-1">
-            <div><Badge bg="danger" className="me-1">Vowels</Badge> 10 coins</div>
-            <div><Badge bg="warning" className="me-1">High</Badge> 5 coins</div>
-            <div><Badge bg="info" className="me-1">Med</Badge> 2-4 coins</div>
-            <div><Badge bg="secondary" className="me-1">Low</Badge> 1 coin</div>
+            <Badge bg="danger" className="me-1">High 10+</Badge>
+            <Badge bg="warning" className="me-1">High 6–9</Badge>
+            <Badge bg="info" className="me-1">Med 2–5</Badge>
+            <Badge bg="secondary" className="me-1">Low &lt;2</Badge>
           </div>
-          <em className="d-block mt-1">Only one vowel per match!</em>
+          <em className="d-block mt-2">Only one vowel per match. Vowels cost 10.</em>
         </div>
       </Card.Body>
     </Card>
   );
 }
-
-export default Butterfly;
-
-// "I can't go back to yesterday because I was a different person then." - Alice in Wonderland

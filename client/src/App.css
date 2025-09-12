@@ -302,6 +302,31 @@
   outline-offset: 2px;
 }
 
+/* Hover Effects */
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Home Page Specific Styles */
+.hero-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Navigation Cards Hover */
+.nav-card {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.nav-card:hover {
+  border-color: var(--bs-primary);
+  transform: translateY(-3px);
+}
+
 /* Loading States */
 .loading-spinner {
   display: inline-block;

@@ -1,28 +1,25 @@
-import { Card, Button, Row, Col, Container } from 'react-bootstrap';
+// client/src/pages/Home.jsx
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
-function Home({ user }) {
+export default function HomePage() {
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  const handleGuestModeClick = () => {
-    navigate('/guest');
-  };
-
+  const handleGuestModeClick = () => navigate('/guest');
   const handleNormalModeClick = () => {
-    if (user) {
-      navigate('/game');
-    } else {
-      navigate('/login');
-    }
+    if (user) return navigate('/play');
+    return navigate('/login');
   };
 
   return (
-    <Container fluid className="h-100 d-flex align-items-center justify-content-center">
-      <div className="text-center" style={{ maxWidth: '800px', width: '100%' }}>
+    <Container fluid className="h-100 d-flex align-items-center justify-content-center py-5">
+      <div className="text-center" style={{ maxWidth: '980px', width: '100%' }}>
         {/* Welcome Header */}
         <div className="mb-5">
-          <h1 className="display-4 fw-bold text-primary mb-3">
-            🎮 Guess the Sentence Game
+          <h1 className="display-5 fw-bold text-primary mb-3">
+            🎮 Guess the Sentence
           </h1>
           <p className="lead text-muted">
             Challenge yourself to guess hidden sentences! Choose your preferred game mode below.
@@ -33,9 +30,12 @@ function Home({ user }) {
         <Row className="g-4 justify-content-center">
           {/* Guest Mode */}
           <Col lg={5} md={6} sm={12}>
-            <Card className="h-100 shadow-sm border-0" style={{ transition: 'transform 0.2s' }} 
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0px)'}>
+            <Card
+              className="h-100 shadow-sm border-0"
+              style={{ transition: 'transform 0.2s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-5px)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0px)')}
+            >
               <Card.Body className="d-flex flex-column text-center p-4">
                 <div className="mb-3">
                   <div className="display-1 mb-3">👤</div>
@@ -45,16 +45,16 @@ function Home({ user }) {
                   <p className="text-muted mb-3">
                     Play without registration! Perfect for a quick game session.
                   </p>
-                  <ul className="list-unstyled text-start">
+                  <ul className="list-unstyled text-start mx-auto" style={{ maxWidth: 360 }}>
                     <li className="mb-2">🎯 <strong>Simple sentences</strong></li>
                     <li className="mb-2">⏱️ <strong>60 seconds per game</strong></li>
                     <li className="mb-2">🆓 <strong>No coins required</strong></li>
                     <li className="mb-2">📱 <strong>No registration needed</strong></li>
                   </ul>
                 </div>
-                <Button 
-                  variant="outline-primary" 
-                  size="lg" 
+                <Button
+                  variant="outline-primary"
+                  size="lg"
                   className="w-100 fw-bold"
                   onClick={handleGuestModeClick}
                 >
@@ -66,9 +66,12 @@ function Home({ user }) {
 
           {/* Normal Mode */}
           <Col lg={5} md={6} sm={12}>
-            <Card className="h-100 shadow-sm border-0" style={{ transition: 'transform 0.2s' }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0px)'}>
+            <Card
+              className="h-100 shadow-sm border-0"
+              style={{ transition: 'transform 0.2s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-5px)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0px)')}
+            >
               <Card.Body className="d-flex flex-column text-center p-4">
                 <div className="mb-3">
                   <div className="display-1 mb-3">🏆</div>
@@ -76,24 +79,27 @@ function Home({ user }) {
                 </div>
                 <div className="mb-4 flex-grow-1">
                   <p className="text-muted mb-3">
-                    Full game experience with coins, rewards, and challenging sentences!
+                    Full experience with coins, rewards, and challenging sentences!
                   </p>
-                  <ul className="list-unstyled text-start">
+                  <ul className="list-unstyled text-start mx-auto" style={{ maxWidth: 360 }}>
                     <li className="mb-2">💰 <strong>Coin system & rewards</strong></li>
                     <li className="mb-2">📚 <strong>Variety of sentences</strong></li>
                     <li className="mb-2">🎯 <strong>Strategic letter costs</strong></li>
                     <li className="mb-2">📊 <strong>Progress tracking</strong></li>
                   </ul>
                 </div>
+
                 {user ? (
                   <div>
                     <div className="mb-3 p-2 bg-light rounded">
-                      <small className="text-muted">Welcome back, <strong>{user.username}</strong>!</small>
-                      <div className="text-primary fw-bold">💰 {user.coins || 0} coins available</div>
+                      <small className="text-muted">
+                        Welcome back, <strong>{user.username}</strong>!
+                      </small>
+                      <div className="text-primary fw-bold">💰 {user.coins ?? 0} coins available</div>
                     </div>
-                    <Button 
-                      variant="primary" 
-                      size="lg" 
+                    <Button
+                      variant="primary"
+                      size="lg"
                       className="w-100 fw-bold"
                       onClick={handleNormalModeClick}
                       disabled={!user.coins || user.coins <= 0}
@@ -106,9 +112,9 @@ function Home({ user }) {
                     <p className="small text-muted mb-3">
                       <em>Login required for this mode</em>
                     </p>
-                    <Button 
-                      variant="primary" 
-                      size="lg" 
+                    <Button
+                      variant="primary"
+                      size="lg"
                       className="w-100 fw-bold"
                       onClick={handleNormalModeClick}
                     >
@@ -123,25 +129,29 @@ function Home({ user }) {
 
         {/* Additional Info */}
         <div className="mt-5 pt-4 border-top">
-          <Row className="text-center">
+          <Row className="text-center g-4">
             <Col md={4}>
               <h5 className="fw-bold text-secondary">🎲 Random Sentences</h5>
-              <p className="small text-muted">Each game features a different sentence to keep you challenged</p>
+              <p className="small text-muted">Each game features a different sentence to keep you challenged.</p>
             </Col>
             <Col md={4}>
               <h5 className="fw-bold text-secondary">⚡ Fast-Paced</h5>
-              <p className="small text-muted">60-second timer adds excitement to every round</p>
+              <p className="small text-muted">60-second timer adds excitement to every round.</p>
             </Col>
             <Col md={4}>
               <h5 className="fw-bold text-secondary">🧠 Strategic</h5>
-              <p className="small text-muted">Choose letters wisely based on cost and probability</p>
+              <p className="small text-muted">Choose letters wisely based on cost and frequency.</p>
             </Col>
           </Row>
-          
+
           {!user && (
             <div className="mt-4">
               <p className="text-muted mb-2">
-                New to the game? <Button variant="link" className="p-0" onClick={() => navigate('/register')}>Create an account</Button> to unlock the full experience!
+                New to the game?{' '}
+                <Button variant="link" className="p-0 align-baseline" onClick={() => navigate('/register')}>
+                  Create an account
+                </Button>{' '}
+                to unlock the full experience!
               </p>
             </div>
           )}
@@ -150,5 +160,3 @@ function Home({ user }) {
     </Container>
   );
 }
-
-export default Home;
