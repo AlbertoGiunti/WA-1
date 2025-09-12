@@ -15,7 +15,7 @@ function NavigationBar({ user, onLogout }) {
     <nav className="navbar navbar-expand-lg navbar-dark" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       <div className="container-fluid">
         <a className="navbar-brand fw-bold" href="/" style={{ fontSize: '1.5rem' }}>
-          🎯 Guess Sentence
+          🎮 Guess the Sentence
         </a>
         <div className="navbar-nav ms-auto">
           {user ? (

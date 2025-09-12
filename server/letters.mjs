@@ -1,14 +1,14 @@
-// Frequenze indicative (per componente Butterfly)
+// Indicative frequencies (for Butterfly component)
 export const letterFrequency = {
   E:12.7, T:9.1, A:8.2, O:7.5, I:7.0, N:6.7, S:6.3, H:6.1, R:6.0, D:4.3,
   L:4.0, C:2.8, U:2.8, M:2.4, W:2.4, F:2.2, G:2.0, Y:2.0, P:1.9, B:1.5,
   V:1.0, K:0.8, J:0.15, X:0.15, Q:0.1, Z:0.07
 };
 
-// Costo: vocali 10; consonanti in fasce (5..1)
+// Cost: vowels 10; consonants in tiers (5..1)
 const vowels = new Set(['A','E','I','O','U']);
-const tier5 = new Set(['T','N','S','H','R']);    // più frequenti -> più costose tra le cons
-const tier4 = new Set(['D','L','C']);            // scelta indicativa coerente con consegna
+const tier5 = new Set(['T','N','S','H','R']);    // most frequent -> most expensive among consonants
+const tier4 = new Set(['D','L','C']);            // indicative choice consistent with requirements
 const tier3 = new Set(['U','M','W','F']);
 const tier2 = new Set(['G','Y','P','B','V','K']);
 const tier1 = new Set(['J','X','Q','Z']);
@@ -21,7 +21,7 @@ export function letterCost(ch) {
   if (tier3.has(c)) return 3;
   if (tier2.has(c)) return 2;
   if (tier1.has(c)) return 1;
-  return 2; // default per sicurezza
+  return 2; // default for safety
 }
 
 export function randomButterfly(n=10) {

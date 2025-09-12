@@ -1,5 +1,14 @@
 import { Card } from 'react-bootstrap';
 
+/**
+ * Displays the sentence with revealed letters and placeholders
+ * Shows guessed letters in green, missing letters in red (when finished)
+ * @param {string} mask - Binary string indicating revealed positions
+ * @param {boolean[]} spaces - Array indicating space positions
+ * @param {string[]} revealed - Array of revealed letters (null for hidden)
+ * @param {string} sentence - Complete sentence (shown when finished)
+ * @param {boolean} finished - Whether the game has ended
+ */
 export default function Grid({ mask, spaces, revealed, sentence, finished }) {
   if (!mask || !spaces) {
     return (
@@ -26,7 +35,7 @@ export default function Grid({ mask, spaces, revealed, sentence, finished }) {
       }
 
       const isRevealed = mask[i] === '1';
-      // priorità: 1) lettera rivelata dal server  2) se finito, usa la frase completa  3) placeholder
+      // Priority: 1) letter revealed by server  2) if finished, use complete sentence  3) placeholder
       const revealedLetter = Array.isArray(revealed) ? revealed[i] : null;
       const finalLetter = revealedLetter ?? (finished && sentence ? sentence[i] : null);
 
@@ -35,11 +44,11 @@ export default function Grid({ mask, spaces, revealed, sentence, finished }) {
 
       if (finalLetter) {
         content = finalLetter;
-        className += isRevealed ? ' guessed' : ' missing'; // verde se rivelata, rosso se rivelata solo a fine match
+        className += isRevealed ? ' guessed' : ' missing'; // green if revealed, red if revealed only at match end
       } else if (!finished) {
         className += ' placeholder';
       } else {
-        // match finito ma il server non ha inviato sentence completa: resta puntino
+        // match finished but server didn't send complete sentence: keep placeholder dot
         className += ' placeholder';
       }
 

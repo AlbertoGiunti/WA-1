@@ -3,29 +3,29 @@ import { useState, useEffect } from 'react';
 import { Card, Badge, Button } from 'react-bootstrap';
 import { api } from '../api';
 
-// Corrispondenza con le fasce di costo del server - Schema colori personalizzato
+// Cost tier mapping with server-side schema - Custom color scheme
 function getCostBadgeColor(cost) {
   switch (cost) {
-    case 10: return 'primary';    // Vocali (A,E,I,O,U) - Azzurro
-    case 5:  return 'success';    // Tier 5 (T,N,S,H,R) - Verde
-    case 4:  return 'warning';    // Tier 4 (D,L,C) - Verde chiaro/Giallo
-    case 3:  return 'warning';    // Tier 3 (U,M,W,F) - Giallo
-    case 2:  return 'warning';    // Tier 2 (G,Y,P,B,V,K) - Arancione
-    case 1:  return 'danger';     // Tier 1 (J,X,Q,Z) - Rosso
-    default: return 'secondary'; // Default
+    case 10: return 'primary';    // Vowels (A,E,I,O,U) - Blue
+    case 5:  return 'success';    // Tier 5 (T,N,S,H,R) - Green
+    case 4:  return 'warning';    // Tier 4 (D,L,C) - Light green/Yellow
+    case 3:  return 'warning';    // Tier 3 (U,M,W,F) - Yellow
+    case 2:  return 'warning';    // Tier 2 (G,Y,P,B,V,K) - Orange
+    case 1:  return 'danger';     // Tier 1 (J,X,Q,Z) - Red
+    default: return 'secondary'; // Default gray
   }
 }
 
-// Funzione per ottenere colori CSS personalizzati
+// Function to get custom CSS colors for letter cost visualization
 function getCostColor(cost) {
   switch (cost) {
-    case 10: return '#0d6efd';    // Azzurro per vocali
-    case 5:  return '#00d221';    // Verde per tier 5
-    case 4:  return '#8fbc8f';    // Verde chiaro per tier 4
-    case 3:  return '#ffd700';    // Giallo per tier 3
-    case 2:  return '#ff8c00';    // Arancione per tier 2
-    case 1:  return '#dc3545';    // Rosso per tier 1
-    default: return '#6c757d';    // Grigio default
+    case 10: return '#0d6efd';    // Blue for vowels
+    case 5:  return '#00d221';    // Green for tier 5
+    case 4:  return '#8fbc8f';    // Light green for tier 4
+    case 3:  return '#ffd700';    // Yellow for tier 3
+    case 2:  return '#ff8c00';    // Orange for tier 2
+    case 1:  return '#dc3545';    // Red for tier 1
+    default: return '#6c757d';    // Default gray
   }
 }
 
@@ -38,7 +38,7 @@ export default function Butterfly() {
     setLoading(true); setErr('');
     try {
       const data = await api.getButterfly(); // [{letter,frequency,cost}]
-      // normalizza lettera in UPPERCASE per coerenza col resto dell'app
+      // Normalize letter to UPPERCASE for consistency with the rest of the app
       setLetters(data.map(x => ({ ...x, letter: String(x.letter).toUpperCase() })));
     } catch (e) {
       setErr(e.message || 'Error fetching random letters');

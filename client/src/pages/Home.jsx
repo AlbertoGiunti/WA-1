@@ -19,7 +19,7 @@ export default function HomePage() {
         {/* Welcome Header */}
         <div className="mb-5">
           <h1 className="display-5 fw-bold mb-3" style={{ color: 'var(--primary-color)' }}>
-            � Guess the Sentence
+            🎮 Guess the Sentence
           </h1>
           <p className="lead" style={{ color: 'var(--text-secondary)' }}>
             Challenge yourself to guess hidden sentences! Choose your preferred game mode below.

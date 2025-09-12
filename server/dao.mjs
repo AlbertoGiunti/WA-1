@@ -2,13 +2,27 @@ import dayjs from 'dayjs';
 import { getDb } from './db.mjs';
 import { letterCost } from './letters.mjs';
 
-const MATCH_SECONDS = 60;
-const TIME_PENALTY = 20;
+// Game configuration constants
+const MATCH_SECONDS = 60;  // Duration of each game match in seconds
+const TIME_PENALTY = 20;   // Coin penalty when time runs out
 
+/**
+ * Creates initial reveal mask for a sentence
+ * Spaces are revealed (1), letters are hidden (0)
+ * @param {string} sentenceU - Uppercase sentence
+ * @returns {string} Binary mask string
+ */
 function buildMask(sentenceU) {
   return [...sentenceU].map(ch => ch === ' ' ? '1' : '0').join('');
 }
 
+/**
+ * Updates the reveal mask when a letter is guessed
+ * @param {string} sentenceU - Uppercase sentence
+ * @param {string} mask - Current reveal mask
+ * @param {string} letterU - Uppercase letter being guessed
+ * @returns {string} Updated mask with revealed letters
+ */
 function revealMask(sentenceU, mask, letterU) {
   const arr = mask.split('');
   for (let i = 0; i < sentenceU.length; i++) {
@@ -17,6 +31,12 @@ function revealMask(sentenceU, mask, letterU) {
   return arr.join('');
 }
 
+/**
+ * Checks if the entire sentence has been revealed
+ * @param {string} mask - Current reveal mask
+ * @param {string} sentenceU - Uppercase sentence
+ * @returns {boolean} True if all letters are revealed
+ */
 function isAllRevealed(mask, sentenceU) {
   for (let i = 0; i < mask.length; i++) {
     if (sentenceU[i] !== ' ' && mask[i] === '0') return false;
@@ -24,12 +44,22 @@ function isAllRevealed(mask, sentenceU) {
   return true;
 }
 
+/**
+ * Gets the current coin balance for a user
+ * @param {number} userId - User ID
+ * @returns {number} Current coin balance
+ */
 export async function getUserCoins(userId) {
   const db = await getDb();
   const u = await db.get('SELECT coins FROM users WHERE id=?', [userId]);
   return u?.coins ?? 0;
 }
 
+/**
+ * Gets the currently active match for a user or guest
+ * @param {number|null} userId - User ID (null for guest)
+ * @returns {Object|null} Active match object or null
+ */
 export async function currentMatch(userId) {
   const db = await getDb();
   const m = await db.get(
@@ -39,6 +69,13 @@ export async function currentMatch(userId) {
   return m || null;
 }
 
+/**
+ * Starts a new game match for a user or guest
+ * @param {Object} params - Parameters
+ * @param {number|null} params.userId - User ID (null for guest)
+ * @param {boolean} params.guest - Whether this is a guest match
+ * @returns {Object} New match object with initial state
+ */
 export async function startMatch({ userId = null, guest = false }) {
   const db = await getDb();
   const row = await db.get(
@@ -58,6 +95,11 @@ export async function startMatch({ userId = null, guest = false }) {
   return await db.get('SELECT * FROM matches WHERE id=?', [res.lastID]);
 }
 
+/**
+ * Checks if a match has timed out and applies penalties if necessary
+ * @param {Object} m - Match object to check
+ * @returns {Object} Updated match object (may have status changed to 'lost')
+ */
 async function closeIfTimeout(m) {
   const db = await getDb();
   const now = dayjs().unix();
@@ -65,7 +107,7 @@ async function closeIfTimeout(m) {
   if (now <= m.ends_at) return m;
 
   if (m.user_id) {
-    // Prendi i coins attuali dell'utente dalla tabella users
+    // Get current user coins from the users table
     const currentCoins = await getUserCoins(m.user_id);
     const penalty = Math.min(TIME_PENALTY, currentCoins);
     const newCoins = Math.max(0, currentCoins - penalty);
@@ -85,11 +127,11 @@ export async function getMatchSafe(m) {
   const sentenceU = s.text.toUpperCase();
 
   const revealed = [...sentenceU].map((ch, i) => {
-    if (ch === ' ') return null;                             // spazi sempre null
-    return m.revealed_mask[i] === '1' ? ch : null;          // lettera rivelata vs non rivelata
+    if (ch === ' ') return null;                             // spaces always null
+    return m.revealed_mask[i] === '1' ? ch : null;          // revealed letter vs not revealed
   });
 
-   // A fine partita puoi mostrare tutta la frase
+   // At the end of the game you can show the complete sentence
   const fullSentence = (m.status !== 'playing') ? sentenceU : null;
 
   const result = {
@@ -108,6 +150,14 @@ export async function getMatchSafe(m) {
   return result;
 }
 
+/**
+ * Processes a letter guess for a game match
+ * @param {Object} params - Parameters
+ * @param {number} params.matchId - Match ID
+ * @param {number|null} params.userId - User ID (null for guest)
+ * @param {string} params.letter - Letter being guessed
+ * @returns {Object} Result with updated match and message
+ */
 export async function guessLetter({ matchId, userId = null, letter }) {
   const db = await getDb();
   const m = await db.get('SELECT * FROM matches WHERE id=?', [matchId]);
@@ -128,7 +178,7 @@ export async function guessLetter({ matchId, userId = null, letter }) {
   const present = S.includes(L);
   const effectiveCost = (present ? cost : cost * 2);
 
-  // Gestione coins - prendi i coins attuali dall'utente
+  // Coin management - get current user coins
   let newCoins = null;
   if (mm.user_id) {
     const currentCoins = await getUserCoins(mm.user_id);
@@ -181,7 +231,7 @@ export async function guessSentence({ matchId, userId = null, sentence }) {
   let status = mm.status;
   let message = 'Wrong sentence. Keep trying!';
 
-  // Gestione coins - prendi i coins attuali dall'utente
+  // Coin management - get current user coins
   let newCoins = null;
   if (ok) {
     newMask = [...S].map(_ => '1').join('');

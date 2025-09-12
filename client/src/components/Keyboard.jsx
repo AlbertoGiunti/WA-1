@@ -5,16 +5,16 @@ import { getLetterCosts } from '../api.js';
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const VOWELS = new Set(['A', 'E', 'I', 'O', 'U']);
 
-// Funzione per ottenere il colore basato sul costo - Stesso schema di Butterfly
+// Function to get color based on cost - Same scheme as Butterfly component
 function getCostColor(cost) {
   switch (cost) {
-    case 10: return '#0d6efd';    // Azzurro per vocali
-    case 5:  return '#00d221';    // Verde per tier 5
-    case 4:  return '#8fbc8f';    // Verde chiaro per tier 4
-    case 3:  return '#ffd700';    // Giallo per tier 3
-    case 2:  return '#ff8c00';    // Arancione per tier 2
-    case 1:  return '#dc3545';    // Rosso per tier 1
-    default: return '#6c757d';    // Grigio default
+    case 10: return '#0d6efd';    // Blue for vowels
+    case 5:  return '#00d221';    // Green for tier 5
+    case 4:  return '#8fbc8f';    // Light green for tier 4
+    case 3:  return '#ffd700';    // Yellow for tier 3
+    case 2:  return '#ff8c00';    // Orange for tier 2
+    case 1:  return '#dc3545';    // Red for tier 1
+    default: return '#6c757d';    // Default gray
   }
 }
 
@@ -29,13 +29,13 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
         setLetterCosts(costs);
       } catch (error) {
         console.error('Failed to fetch letter costs:', error);
-        // Fallback ai costi di default se l'API fallisce
+        // Fallback to default costs if API fails
         const fallbackCosts = {};
         LETTERS.forEach(letter => {
           if (VOWELS.has(letter)) {
             fallbackCosts[letter] = 10;
           } else {
-            // Costi approssimativi per le consonanti
+            // Approximate costs for consonants
             const tier5 = new Set(['T','N','S','H','R']);
             const tier4 = new Set(['D','L','C']);
             const tier3 = new Set(['U','M','W','F']);
@@ -62,7 +62,7 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
     const cost = letterCosts[letter] || (isVowel ? 10 : 2);
     const canPick = !disabled && !isGuessed && (!isVowel || !usedVowel);
     
-    // Calcola il colore basato sul costo
+    // Calculate color based on cost
     const backgroundColor = getCostColor(cost);
     const isDisabled = !canPick || isGuessed;
 

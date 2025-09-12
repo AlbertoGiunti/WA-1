@@ -1,9 +1,17 @@
 import { useState } from 'react';
 import { Card, Form, Button, InputGroup } from 'react-bootstrap';
 
+/**
+ * Component for guessing the complete sentence
+ * Users can win instantly by typing the exact sentence
+ * @param {boolean} disabled - Whether input is disabled (game over/timeout)
+ * @param {function} onGuess - Callback when sentence is submitted
+ * @param {boolean} compact - Whether to show compact version for status bar
+ */
 export default function GuessSentence({ disabled, onGuess, compact = false }) {
   const [txt, setTxt] = useState('');
   
+  // Handle form submission - convert to uppercase and clear input
   const submit = (e) => {
     e.preventDefault();
     if (!txt.trim()) return;
@@ -11,6 +19,7 @@ export default function GuessSentence({ disabled, onGuess, compact = false }) {
     setTxt('');
   };
 
+  // Compact version for embedding in status bars
   if (compact) {
     return (
       <Form onSubmit={submit}>
