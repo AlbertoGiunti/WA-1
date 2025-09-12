@@ -27,18 +27,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+    <div className="page-content">
       <Container className="fade-in-up">
       <Row className="justify-content-center">
         <Col md={6} lg={4}>
-          <Card className="shadow">
-            <Card.Header className="text-center">
-              <h2 className="mb-0">🔐 Login</h2>
-              <small className="text-light">Sign in to play with coins</small>
+          <Card className="auth-card">
+            <Card.Header className="text-center" style={{ backgroundColor: 'var(--primary-bg)', borderBottom: '1px solid var(--border-color)' }}>
+              <h2 className="mb-0" style={{ color: 'var(--primary-color)' }}>🔐 Login</h2>
+              <small style={{ color: 'var(--text-secondary)' }}>Sign in to play with coins</small>
             </Card.Header>
             <Card.Body className="p-4">
               {err && (
-                <Alert variant="danger" className="text-center">
+                <Alert variant="danger" className="text-center" style={{ backgroundColor: 'var(--error-bg)', borderColor: 'var(--error-color)', color: 'var(--error-color)' }}>
                   {err}
                 </Alert>
               )}
@@ -90,20 +90,20 @@ export default function LoginPage() {
               </Form>
               
               <div className="mt-4 text-center">
-                <small className="text-muted">
+                <small style={{ color: 'var(--text-secondary)' }}>
                   Don't have an account?{' '}
-                  <Link to="/register" className="text-decoration-none">
+                  <Link to="/register" className="text-decoration-none" style={{ color: 'var(--accent-color)' }}>
                     Create one here
                   </Link>
                   {' • '}
-                  <Link to="/" className="text-decoration-none">
+                  <Link to="/" className="text-decoration-none" style={{ color: 'var(--accent-color)' }}>
                     Back to Home
                   </Link>
                 </small>
               </div>
               
               <div className="mt-3 text-center">
-                <small className="text-muted">
+                <small style={{ color: 'var(--text-secondary)' }}>
                   <strong>Demo users:</strong> jacopo, bob, alice<br/>
                   <strong>Password:</strong> pwd
                 </small>

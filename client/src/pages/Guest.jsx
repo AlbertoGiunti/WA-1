@@ -63,22 +63,22 @@ export default function GuestPage() {
   };
 
   return (
-    <div style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+    <div className="page-content">
       <Container className="fade-in-up">
         <Row className="justify-content-center">
           <Col lg={10}>
-          <Card className="mb-4">
-            <Card.Header className="text-center">
-              <h2 className="mb-0">🎮 Play as Guest</h2>
-              <small className="text-light">No registration required - just for fun!</small>
+          <Card className="game-card mb-4">
+            <Card.Header className="text-center" style={{ backgroundColor: 'var(--primary-bg)', borderBottom: '1px solid var(--border-color)' }}>
+              <h2 className="mb-0" style={{ color: 'var(--primary-color)' }}>🎮 Play as Guest</h2>
+              <small style={{ color: 'var(--text-secondary)' }}>No registration required - just for fun!</small>
             </Card.Header>
           </Card>
 
           {!match && (
-            <Card className="text-center">
+            <Card className="game-card text-center">
               <Card.Body className="p-5">
-                <h4>Ready to test your word skills? 🧠</h4>
-                <p className="text-muted mb-4">
+                <h4 style={{ color: 'var(--secondary-color)' }}>Ready to test your word skills? 🧠</h4>
+                <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
                   Start a guest game to practice! No coins needed, just pure fun.
                 </p>
                 <Button 
@@ -96,7 +96,7 @@ export default function GuestPage() {
           {match && (
             <>
               {/* Game Status Bar */}
-              <Card className="mb-4">
+              <Card className="game-card mb-4">
                 <Card.Body>
                   <Row className="align-items-center">
                     <Col md={3}>

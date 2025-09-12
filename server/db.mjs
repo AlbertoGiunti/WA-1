@@ -47,9 +47,9 @@ export async function initDb() {
   const cntUsers = (await db.get('SELECT COUNT(*) as c FROM users')).c;
   if (cntUsers === 0) {
     const seed = [
-      { username: 'jacopo', coins: 150, password: 'pwd' },
-      { username: 'bob', coins: 0,    password: 'pwd' },
-      { username: 'alice', coins: 45,  password: 'pwd' }
+      { username: 'testuser150', coins: 150, password: 'pwd' },
+      { username: 'testuser0', coins: 0,    password: 'pwd' },
+      { username: 'testuser45', coins: 45,  password: 'pwd' }
     ];
     for (const u of seed) {
       const salt = crypto.randomBytes(16).toString('hex');

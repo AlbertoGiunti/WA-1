@@ -79,27 +79,27 @@ export default function PlayPage() {
   };
 
   return (
-    <div style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+    <div className="page-content">
       <Container className="fade-in-up">
         <Row className="justify-content-center">
           <Col lg={10}>
-          <Card className="mb-4">
-            <Card.Header className="text-center">
-              <h2 className="mb-0">🎯 Play for Coins</h2>
-              <small className="text-light">Use your coins wisely to reveal letters!</small>
+          <Card className="game-card mb-4">
+            <Card.Header className="text-center" style={{ backgroundColor: 'var(--primary-bg)', borderBottom: '1px solid var(--border-color)' }}>
+              <h2 className="mb-0" style={{ color: 'var(--primary-color)' }}>🎯 Play for Coins</h2>
+              <small style={{ color: 'var(--text-secondary)' }}>Use your coins wisely to reveal letters!</small>
             </Card.Header>
           </Card>
 
           {!match && (
-            <Card className="text-center">
+            <Card className="game-card text-center">
               <Card.Body className="p-5">
-                <h4>Ready to play? 🎮</h4>
-                <p className="text-muted mb-4">
+                <h4 style={{ color: 'var(--secondary-color)' }}>Ready to play? 🎮</h4>
+                <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
                   Each letter costs coins. Vowels cost 10 coins, consonants vary by frequency.
                   Win the game to earn 100 bonus coins!
                 </p>
                 <div className="mb-4">
-                  <Badge bg="warning" className="p-3 fs-5">
+                  <Badge className="p-3 fs-5" style={{ backgroundColor: 'var(--warning-bg)', color: 'var(--warning-color)' }}>
                     💰 Current Balance: {user?.coins || 0} coins
                   </Badge>
                 </div>
@@ -113,7 +113,7 @@ export default function PlayPage() {
                     🚀 Start New Match
                   </Button>
                 ) : (
-                  <Alert variant="warning">
+                  <Alert variant="warning" style={{ backgroundColor: 'var(--warning-bg)', borderColor: 'var(--warning-color)', color: 'var(--warning-color)' }}>
                     <h5>No coins left! 😔</h5>
                     <p className="mb-0">You need coins to play. Try the guest mode instead!</p>
                   </Alert>
@@ -125,7 +125,7 @@ export default function PlayPage() {
           {match && (
             <>
               {/* Game Status Bar */}
-              <Card className="mb-4">
+              <Card className="game-card mb-4">
                 <Card.Body>
                   <Row className="align-items-center">
                     <Col md={2}>
@@ -190,7 +190,7 @@ export default function PlayPage() {
           )}
         </Col>
       </Row>
-    </Container>
+      </Container>
     </div>
   );
 }
