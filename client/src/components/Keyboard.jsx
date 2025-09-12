@@ -5,6 +5,19 @@ import { getLetterCosts } from '../api.js';
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const VOWELS = new Set(['A', 'E', 'I', 'O', 'U']);
 
+// Funzione per ottenere il colore basato sul costo - Stesso schema di Butterfly
+function getCostColor(cost) {
+  switch (cost) {
+    case 10: return '#0d6efd';    // Azzurro per vocali
+    case 5:  return '#00d221';    // Verde per tier 5
+    case 4:  return '#8fbc8f';    // Verde chiaro per tier 4
+    case 3:  return '#ffd700';    // Giallo per tier 3
+    case 2:  return '#ff8c00';    // Arancione per tier 2
+    case 1:  return '#dc3545';    // Rosso per tier 1
+    default: return '#6c757d';    // Grigio default
+  }
+}
+
 export default function Keyboard({ guessed, usedVowel, disabled, onPick }) {
   const [letterCosts, setLetterCosts] = useState({});
   const [loading, setLoading] = useState(true);
@@ -49,32 +62,51 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick }) {
     const cost = letterCosts[letter] || (isVowel ? 10 : 2);
     const canPick = !disabled && !isGuessed && (!isVowel || !usedVowel);
     
-    let variant = 'outline-primary';
-    if (isGuessed) {
-      variant = 'secondary';
-    } else if (isVowel) {
-      variant = usedVowel ? 'outline-danger' : 'warning';
-    }
+    // Calcola il colore basato sul costo
+    const backgroundColor = getCostColor(cost);
+    const isDisabled = !canPick || isGuessed;
 
     return (
       <Col key={letter} xs={2} sm={2} md={1} className="mb-2">
-        <Badge
-          as="button"
-          bg={variant}
-          className={`letter-badge w-100 p-2 ${canPick ? '' : 'disabled'}`}
+        <div
+          className={`letter-badge w-100 p-2 text-center`}
           onClick={() => canPick && onPick(letter)}
-          disabled={!canPick}
           style={{
+            backgroundColor: isDisabled ? '#e9ecef' : backgroundColor,
+            border: `2px solid ${isDisabled ? '#dee2e6' : backgroundColor}`,
+            color: isDisabled ? '#6c757d' : 'white',
             cursor: canPick ? 'pointer' : 'not-allowed',
-            opacity: isGuessed ? 0.5 : 1,
-            fontSize: '0.9rem'
+            opacity: isGuessed ? 0.6 : 1,
+            fontSize: '0.9rem',
+            fontWeight: 'bold',
+            borderRadius: '8px',
+            minHeight: '50px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.3s ease',
+            boxShadow: canPick ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+            transform: canPick ? 'scale(1)' : 'scale(0.95)'
+          }}
+          onMouseEnter={(e) => {
+            if (canPick) {
+              e.target.style.transform = 'scale(1.05)';
+              e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (canPick) {
+              e.target.style.transform = 'scale(1)';
+              e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+            }
           }}
         >
           <div>{letter}</div>
           <small style={{ fontSize: '0.7rem' }}>
-            {isVowel ? '10' : cost}₵
+            {cost}💰
           </small>
-        </Badge>
+        </div>
       </Col>
     );
   };
@@ -97,9 +129,15 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick }) {
             </Row>
             <div className="mt-3 text-center">
               <small className="text-muted">
-                💰 Vowels cost 10 coins | Consonants vary by frequency
+                💰 Letter costs: 
+                <span style={{ color: '#0d6efd' }}> Vowels(10)</span> |
+                <span style={{ color: '#00d221' }}> Common(5)</span> |
+                <span style={{ color: '#8fbc8f' }}> Medium(4)</span> |
+                <span style={{ color: '#ffd700' }}> Less(3)</span> |
+                <span style={{ color: '#ff8c00' }}> Rare(2)</span> |
+                <span style={{ color: '#dc3545' }}> Very Rare(1)</span>
                 {usedVowel && (
-                  <span className="text-warning d-block">
+                  <span className="text-warning d-block mt-1">
                     ⚠️ Vowel already used in this match
                   </span>
                 )}

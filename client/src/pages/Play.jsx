@@ -166,7 +166,13 @@ export default function PlayPage() {
               </Card>
 
               {/* Game Components */}
-              <Grid mask={match.revealedMask} spaces={match.spaces} />
+              <Grid 
+                mask={match.revealedMask} 
+                spaces={match.spaces}
+                revealed={match.revealed}
+                sentence={match.sentence}
+                finished={match.status !== 'playing'}
+              />
 
               <Keyboard
                 guessed={new Set(match.guessedLetters)}

@@ -196,7 +196,7 @@
 .sentence-letter.guessed {
   background: linear-gradient(45deg, #4CAF50, #45a049);
   color: white;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 4px 15px rgba(55, 249, 2, 0.3);
   transform: translateY(-2px);
 }
 

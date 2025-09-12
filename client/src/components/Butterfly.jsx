@@ -3,12 +3,30 @@ import { useState, useEffect } from 'react';
 import { Card, Badge, Button } from 'react-bootstrap';
 import { api } from '../api';
 
-function freqColor(f) {
-  // euristica: frequenze alte = più “calde”
-  if (f >= 10) return 'danger';     // vowels tipicamente
-  if (f >= 6)  return 'warning';    // high
-  if (f >= 2)  return 'info';       // medium
-  return 'secondary';               // low
+// Corrispondenza con le fasce di costo del server - Schema colori personalizzato
+function getCostBadgeColor(cost) {
+  switch (cost) {
+    case 10: return 'primary';    // Vocali (A,E,I,O,U) - Azzurro
+    case 5:  return 'success';    // Tier 5 (T,N,S,H,R) - Verde
+    case 4:  return 'warning';    // Tier 4 (D,L,C) - Verde chiaro/Giallo
+    case 3:  return 'warning';    // Tier 3 (U,M,W,F) - Giallo
+    case 2:  return 'warning';    // Tier 2 (G,Y,P,B,V,K) - Arancione
+    case 1:  return 'danger';     // Tier 1 (J,X,Q,Z) - Rosso
+    default: return 'secondary'; // Default
+  }
+}
+
+// Funzione per ottenere colori CSS personalizzati
+function getCostColor(cost) {
+  switch (cost) {
+    case 10: return '#0d6efd';    // Azzurro per vocali
+    case 5:  return '#00d221';    // Verde per tier 5
+    case 4:  return '#8fbc8f';    // Verde chiaro per tier 4
+    case 3:  return '#ffd700';    // Giallo per tier 3
+    case 2:  return '#ff8c00';    // Arancione per tier 2
+    case 1:  return '#dc3545';    // Rosso per tier 1
+    default: return '#6c757d';    // Grigio default
+  }
 }
 
 export default function Butterfly() {
@@ -32,10 +50,10 @@ export default function Butterfly() {
   useEffect(() => { load(); }, []);
 
   return (
-    <Card className="h-100 shadow-sm border-0">
-      <Card.Header className="text-center">
+    <Card className="h-100 shadow-sm border-0" style={{ background: 'rgba(255, 255, 255, 0.95)' }}>
+      <Card.Header className="text-center" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
         <div className="d-flex align-items-center justify-content-between">
-          <h5 className="mb-0 w-100 text-center">🦋 Letter Frequencies</h5>
+          <h5 className="mb-0 w-100 text-center">🦋 Letter Costs & Frequencies</h5>
         </div>
       </Card.Header>
 
@@ -48,18 +66,31 @@ export default function Butterfly() {
             <div className="d-flex flex-wrap gap-2 justify-content-center">
               {letters.map((it, idx) => (
                 <div key={idx} className="text-center" style={{ minWidth: 54 }}>
-                  <Badge
-                    bg={freqColor(it.frequency)}
-                    className="fs-5 p-2 mb-1 d-block"
-                    title={`Cost: ${it.cost}`}
+                  <div
+                    style={{ 
+                      backgroundColor: getCostColor(it.cost),
+                      border: 'none',
+                      color: it.cost === 'black', 
+                      borderRadius: '8px',
+                      padding: '8px',
+                      fontSize: '1.25rem',
+                      fontWeight: 'bold',
+                      minHeight: '50px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '4px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}
+                    title={`Frequency: ${it.frequency}% | Cost: ${it.cost} coins`}
                   >
                     {it.letter}
-                  </Badge>
-                  <div className="small text-muted" style={{ fontSize: '0.7rem' }}>
-                    {it.frequency}
                   </div>
-                  <div className="small" style={{ fontSize: '0.7rem' }}>
-                    cost: <strong>{it.cost}</strong>
+                  <div className="small text-muted" style={{ fontSize: '0.7rem' }}>
+                    freq: {it.frequency}%
+                  </div>
+                  <div className="small fw-bold" style={{ fontSize: '0.7rem', color: getCostColor(it.cost) }}>
+                    💰 {it.cost}
                   </div>
                 </div>
               ))}
@@ -75,14 +106,66 @@ export default function Butterfly() {
 
         <hr className="my-3" />
         <div className="small text-muted" style={{ fontSize: '0.8rem' }}>
-          <strong>Legend:</strong>
+          <strong>Cost Tiers:</strong>
           <div className="mt-1">
-            <Badge bg="danger" className="me-1">High 10+</Badge>
-            <Badge bg="warning" className="me-1">High 6–9</Badge>
-            <Badge bg="info" className="me-1">Med 2–5</Badge>
-            <Badge bg="secondary" className="me-1">Low &lt;2</Badge>
+            <span style={{ 
+              backgroundColor: '#0d6efd', 
+              color: 'white', 
+              padding: '4px 8px', 
+              borderRadius: '4px', 
+              marginRight: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 'bold'
+            }}>10💰 Vowels</span>
+            <span style={{ 
+              backgroundColor: '#00d221', 
+              color: 'white', 
+              padding: '4px 8px', 
+              borderRadius: '4px', 
+              marginRight: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 'bold'
+            }}>5💰 Common</span>
+            <span style={{ 
+              backgroundColor: '#8fbc8f', 
+              color: 'white', 
+              padding: '4px 8px', 
+              borderRadius: '4px', 
+              marginRight: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 'bold'
+            }}>4💰 Medium</span>
           </div>
-          <em className="d-block mt-2">Only one vowel per match. Vowels cost 10.</em>
+          <div className="mt-2">
+            <span style={{ 
+              backgroundColor: '#ffd700', 
+              color: 'white', 
+              padding: '4px 8px', 
+              borderRadius: '4px', 
+              marginRight: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 'bold'
+            }}>3💰 Less</span>
+            <span style={{ 
+              backgroundColor: '#ff8c00', 
+              color: 'white', 
+              padding: '4px 8px', 
+              borderRadius: '4px', 
+              marginRight: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 'bold'
+            }}>2💰 Rare</span>
+            <span style={{ 
+              backgroundColor: '#dc3545', 
+              color: 'white', 
+              padding: '4px 8px', 
+              borderRadius: '4px', 
+              marginRight: '4px',
+              fontSize: '0.75rem',
+              fontWeight: 'bold'
+            }}>1💰 Very Rare</span>
+          </div>
+          <em className="d-block mt-2">Letter costs based on frequency in English text.</em>
         </div>
       </Card.Body>
     </Card>

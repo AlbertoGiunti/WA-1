@@ -1,6 +1,6 @@
 import { Card } from 'react-bootstrap';
 
-export default function Grid({ mask, spaces }) {
+export default function Grid({ mask, spaces, revealed, sentence, finished }) {
   if (!mask || !spaces) {
     return (
       <Card className="mb-4">
@@ -16,32 +16,38 @@ export default function Grid({ mask, spaces }) {
     );
   }
 
-  const renderSentence = () => {
-    let elements = [];
-    
+  function renderSentence() {
+    const out = [];
     for (let i = 0; i < mask.length; i++) {
-      if (spaces[i]) {
-        // This is a space character
-        elements.push(
-          <span key={`space-${i}`} className="sentence-space"> </span>
-        );
-      } else {
-        // This is a letter
-        const isRevealed = mask[i] === '1';
-        elements.push(
-          <span
-            key={`letter-${i}`}
-            className={`sentence-letter ${isRevealed ? 'guessed' : 'placeholder'}`}
-          >
-            {isRevealed ? '●' : '_'}
-          </span>
-        );
+      const isSpace = spaces[i];
+      if (isSpace) {
+        out.push(<span key={i} className="mx-2" style={{ display:'inline-block', width:16 }}>&nbsp;</span>);
+        continue;
       }
-    }
-    
-    return elements;
-  };
 
+      const isRevealed = mask[i] === '1';
+      // priorità: 1) lettera rivelata dal server  2) se finito, usa la frase completa  3) placeholder
+      const revealedLetter = Array.isArray(revealed) ? revealed[i] : null;
+      const finalLetter = revealedLetter ?? (finished && sentence ? sentence[i] : null);
+
+      let className = 'sentence-letter d-inline-flex align-items-center justify-content-center';
+      let content = '•';
+
+      if (finalLetter) {
+        content = finalLetter;
+        className += isRevealed ? ' guessed' : ' missing'; // verde se rivelata, rosso se rivelata solo a fine match
+      } else if (!finished) {
+        className += ' placeholder';
+      } else {
+        // match finito ma il server non ha inviato sentence completa: resta puntino
+        className += ' placeholder';
+      }
+
+      out.push(<span key={i} className={className}>{content}</span>);
+    }
+    return out;
+  }
+  
   return (
     <Card className="mb-4">
       <Card.Header>

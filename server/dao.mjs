@@ -86,7 +86,16 @@ export async function getMatchSafe(m) {
   m = await closeIfTimeout(m);
   const s = await db.get('SELECT text FROM sentences WHERE id=?', [m.sentence_id]);
   const sentenceU = s.text.toUpperCase();
-  return {
+
+  const revealed = [...sentenceU].map((ch, i) => {
+    if (ch === ' ') return ' ';                             // spazi sempre ' '
+    return m.revealed_mask[i] === '1' ? ch : null;          // lettera rivelata vs non rivelata
+  });
+
+   // A fine partita puoi mostrare tutta la frase
+  const fullSentence = (m.status !== 'playing') ? sentenceU : null;
+
+  const result = {
     id: m.id,
     status: m.status,
     endsAt: m.ends_at,
@@ -94,8 +103,12 @@ export async function getMatchSafe(m) {
     guessedLetters: m.guessed_letters.split('').filter(Boolean),
     usedVowel: !!m.used_vowel,
     remainingCoins: m.remaining_coins,
-    spaces: [...sentenceU].map(ch => ch === ' ')
+    spaces: [...sentenceU].map(ch => ch === ' '),
+    revealed,
+    fullSentence
   };
+  
+  return result;
 }
 
 export async function guessLetter({ matchId, userId = null, letter }) {
