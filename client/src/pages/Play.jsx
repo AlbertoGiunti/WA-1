@@ -29,6 +29,7 @@ export default function PlayPage() {
       const m = await api.startMatch();
       setMatch(m);
       setMsg('Match started! Good luck! 🍀');
+      await syncCoins();
     } catch (e) { 
       setMsg(`Error: ${e.message}`); 
     }
@@ -83,13 +84,6 @@ export default function PlayPage() {
       <Container className="fade-in-up">
         <Row className="justify-content-center">
           <Col lg={10}>
-          <Card className="game-card mb-4">
-            <Card.Header className="text-center" style={{ backgroundColor: 'var(--primary-bg)', borderBottom: '1px solid var(--border-color)' }}>
-              <h2 className="mb-0" style={{ color: 'var(--primary-color)' }}>🎯 Play for Coins</h2>
-              <small style={{ color: 'var(--text-secondary)' }}>Use your coins wisely to reveal letters!</small>
-            </Card.Header>
-          </Card>
-
           {!match && (
             <Card className="game-card text-center">
               <Card.Body className="p-5">
@@ -124,32 +118,41 @@ export default function PlayPage() {
 
           {match && (
             <>
-              {/* Game Status Bar */}
-              <Card className="game-card mb-4">
-                <Card.Body>
+              {/* Messages - At the top */}
+              {msg && (
+                <Alert 
+                  variant={msg.includes('Error') ? 'danger' : msg.includes('won') || msg.includes('Correct') ? 'success' : 'info'}
+                  className="text-center mb-3"
+                >
+                  {msg}
+                </Alert>
+              )}
+
+              {/* Grid */}
+              <Grid 
+                mask={match.revealedMask} 
+                spaces={match.spaces}
+                revealed={match.revealed}
+                sentence={match.sentence}
+                finished={match.status !== 'playing'}
+              />
+
+              {/* Compact Status Bar with GuessSentence */}
+              <Card className="game-card mb-3">
+                <Card.Body className="py-2">
                   <Row className="align-items-center">
                     <Col md={2}>
-                      <Badge 
-                        bg={match.status === 'playing' ? 'success' : match.status === 'won' ? 'primary' : 'danger'}
-                        className="p-2 fs-6"
-                      >
-                        {match.status.toUpperCase()}
-                      </Badge>
-                    </Col>
-                    <Col md={3}>
                       <div className={`timer-display ${secondsLeft <= 10 ? 'timer-warning' : ''}`}>
                         ⏰ {secondsLeft ?? '-'}s
                       </div>
                     </Col>
-                    <Col md={3}>
-                      <Badge bg="warning" className="p-2">
-                        💰 {match.remainingCoins || 0} coins
+                    <Col md={2}>
+                      <Badge bg="warning" className="p-2" style={{ fontSize: '1.2rem', padding: '0.5rem 0.75rem' }}>
+                        💰 {user?.coins || 0}
                       </Badge>
                     </Col>
-                    <Col md={2}>
-                      <small className="text-muted">
-                        Letters: {match.guessedLetters.length}
-                      </small>
+                    <Col md={6}>
+                      <GuessSentence disabled={finished} onGuess={playSentence} compact={true} />
                     </Col>
                     <Col md={2} className="text-end">
                       <Button 
@@ -165,34 +168,14 @@ export default function PlayPage() {
                 </Card.Body>
               </Card>
 
-              {/* Game Components */}
-              <Grid 
-                mask={match.revealedMask} 
-                spaces={match.spaces}
-                revealed={match.revealed}
-                sentence={match.sentence}
-                finished={match.status !== 'playing'}
-              />
-
+              {/* Keyboard */}
               <Keyboard
                 guessed={new Set(match.guessedLetters)}
                 usedVowel={match.usedVowel}
                 disabled={finished}
                 onPick={playLetter}
               />
-
-              <GuessSentence disabled={finished} onGuess={playSentence} />
             </>
-          )}
-
-          {/* Messages */}
-          {msg && (
-            <Alert 
-              variant={msg.includes('Error') ? 'danger' : msg.includes('won') || msg.includes('Correct') ? 'success' : 'info'}
-              className="text-center"
-            >
-              {msg}
-            </Alert>
           )}
         </Col>
       </Row>

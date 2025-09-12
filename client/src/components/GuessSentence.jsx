@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, Form, Button, InputGroup } from 'react-bootstrap';
 
-export default function GuessSentence({ disabled, onGuess }) {
+export default function GuessSentence({ disabled, onGuess, compact = false }) {
   const [txt, setTxt] = useState('');
   
   const submit = (e) => {
@@ -11,14 +11,38 @@ export default function GuessSentence({ disabled, onGuess }) {
     setTxt('');
   };
 
+  if (compact) {
+    return (
+      <Form onSubmit={submit}>
+        <InputGroup size="sm">
+          <Form.Control
+            type="text"
+            placeholder="Guess the full sentence..."
+            value={txt}
+            onChange={(e) => setTxt(e.target.value.toUpperCase())}
+            disabled={disabled}
+          />
+          <Button 
+            variant="success" 
+            type="submit" 
+            disabled={disabled || !txt.trim()}
+            size="sm"
+          >
+            🎯 Guess!
+          </Button>
+        </InputGroup>
+      </Form>
+    );
+  }
+
   return (
-    <Card className="mb-4">
+    <Card className="mb-3">
       <Card.Header>
         <h5 className="mb-0">💭 Guess the Full Sentence</h5>
       </Card.Header>
-      <Card.Body>
+      <Card.Body className="py-3">
         <Form onSubmit={submit}>
-          <InputGroup className="mb-3">
+          <InputGroup className="mb-2">
             <Form.Control
               type="text"
               placeholder="TYPE THE COMPLETE SENTENCE HERE..."

@@ -38,7 +38,6 @@ export async function initDb() {
       revealed_mask TEXT NOT NULL,
       guessed_letters TEXT NOT NULL,
       used_vowel INTEGER NOT NULL DEFAULT 0,
-      remaining_coins INTEGER,
       FOREIGN KEY(user_id) REFERENCES users(id),
       FOREIGN KEY(sentence_id) REFERENCES sentences(id)
     );

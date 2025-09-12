@@ -18,7 +18,7 @@ function getCostColor(cost) {
   }
 }
 
-export default function Keyboard({ guessed, usedVowel, disabled, onPick }) {
+export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCosts = true }) {
   const [letterCosts, setLetterCosts] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -103,9 +103,11 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick }) {
           }}
         >
           <div>{letter}</div>
-          <small style={{ fontSize: '0.7rem' }}>
-            {cost}💰
-          </small>
+          {showCosts && (
+            <small style={{ fontSize: '0.7rem' }}>
+              {cost}💰
+            </small>
+          )}
         </div>
       </Col>
     );

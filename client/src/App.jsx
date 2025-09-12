@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from './contexts/AuthContext.jsx';
 import { Container, Row, Col } from 'react-bootstrap';
@@ -44,6 +44,10 @@ function NavigationBar({ user, onLogout }) {
 
 function App() {
   const { user, logout } = useAuth();
+  const location = useLocation();
+  
+  // Check if we're on a game page (play or guest)
+  const isGamePage = location.pathname === '/play' || location.pathname === '/guest';
 
   const handleLogout = async () => {
     try {
@@ -60,25 +64,10 @@ function App() {
         onLogout={handleLogout}
       />
       <Container fluid className="flex-grow-1 mt-3 px-2">
-        <Row className="h-100">
-          <Col lg={9} md={8} sm={12} className="h-100">
+        {isGamePage ? (
+          // Full-width layout for game pages
+          <>
             <Routes>
-              <Route 
-                path="/" 
-                element={<HomePage />} 
-              />
-              <Route 
-                path="/login" 
-                element={
-                  user ? <Navigate to="/" /> : <LoginPage />
-                } 
-              />
-              <Route 
-                path="/register" 
-                element={
-                  user ? <Navigate to="/" /> : <RegisterPage />
-                } 
-              />
               <Route 
                 path="/play" 
                 element={
@@ -90,11 +79,41 @@ function App() {
                 element={<GuestPage />} 
               />
             </Routes>
-          </Col>
-          <Col lg={3} md={4} className="d-none d-md-block h-100">
-            <Butterfly />
-          </Col>
-        </Row>
+            {/* Butterfly at bottom for game pages */}
+            <Row className="mt-4">
+              <Col>
+                <Butterfly />
+              </Col>
+            </Row>
+          </>
+        ) : (
+          // Sidebar layout for other pages
+          <Row className="h-100">
+            <Col lg={9} md={8} sm={12} className="h-100">
+              <Routes>
+                <Route 
+                  path="/" 
+                  element={<HomePage />} 
+                />
+                <Route 
+                  path="/login" 
+                  element={
+                    user ? <Navigate to="/" /> : <LoginPage />
+                  } 
+                />
+                <Route 
+                  path="/register" 
+                  element={
+                    user ? <Navigate to="/" /> : <RegisterPage />
+                  } 
+                />
+              </Routes>
+            </Col>
+            <Col lg={3} md={4} className="d-none d-md-block h-100">
+              <Butterfly />
+            </Col>
+          </Row>
+        )}
       </Container>
     </div>
   );

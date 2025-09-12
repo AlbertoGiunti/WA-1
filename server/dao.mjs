@@ -50,16 +50,10 @@ export async function startMatch({ userId = null, guest = false }) {
   const ends = now.add(MATCH_SECONDS, 'second');
   const mask = buildMask(sentenceU);
 
-  let remaining = null;
-  if (!guest && userId) {
-    const coins = await getUserCoins(userId);
-    remaining = coins;
-  }
-
   const res = await db.run(
-    `INSERT INTO matches(user_id, sentence_id, started_at, ends_at, status, revealed_mask, guessed_letters, used_vowel, remaining_coins)
-     VALUES (?,?,?,?,?,?,?,?,?)`,
-    [userId, row.id, now.unix(), ends.unix(), 'playing', mask, '', 0, remaining]
+    `INSERT INTO matches(user_id, sentence_id, started_at, ends_at, status, revealed_mask, guessed_letters, used_vowel)
+     VALUES (?,?,?,?,?,?,?,?)`,
+    [userId, row.id, now.unix(), ends.unix(), 'playing', mask, '', 0]
   );
   return await db.get('SELECT * FROM matches WHERE id=?', [res.lastID]);
 }
@@ -77,7 +71,7 @@ async function closeIfTimeout(m) {
     const newCoins = Math.max(0, currentCoins - penalty);
     
     await db.run('UPDATE users SET coins=? WHERE id=?', [newCoins, m.user_id]);
-    await db.run('UPDATE matches SET status="lost", remaining_coins=? WHERE id=?', [newCoins, m.id]);
+    await db.run('UPDATE matches SET status="lost" WHERE id=?', [m.id]);
   } else {
     await db.run('UPDATE matches SET status="lost" WHERE id=?', [m.id]);
   }
@@ -105,7 +99,7 @@ export async function getMatchSafe(m) {
     revealedMask: m.revealed_mask,
     guessedLetters: m.guessed_letters.split('').filter(Boolean),
     usedVowel: !!m.used_vowel,
-    remainingCoins: m.remaining_coins,
+    //remainingCoins: m.remaining_coins,
     spaces: [...sentenceU].map(ch => ch === ' '),
     revealed,
     sentence: fullSentence  /* Usa 'sentence' invece di "fullSentence" per il frontend */
@@ -134,10 +128,12 @@ export async function guessLetter({ matchId, userId = null, letter }) {
   const present = S.includes(L);
   const effectiveCost = (present ? cost : cost * 2);
 
-  let newCoins = mm.remaining_coins;
+  // Gestione coins - prendi i coins attuali dall'utente
+  let newCoins = null;
   if (mm.user_id) {
-    if ((newCoins ?? 0) <= 0) throw new Error('No coins');
-    newCoins = Math.max(0, (newCoins ?? 0) - effectiveCost);
+    const currentCoins = await getUserCoins(mm.user_id);
+    if (currentCoins <= 0) throw new Error('No coins');
+    newCoins = Math.max(0, currentCoins - effectiveCost);
   }
 
   let newMask = mm.revealed_mask;
@@ -157,12 +153,12 @@ export async function guessLetter({ matchId, userId = null, letter }) {
     .split('').filter((v,i,a)=>a.indexOf(v)===i).join('');
 
   await db.run(
-    `UPDATE matches SET revealed_mask=?, guessed_letters=?, used_vowel=?, status=?, remaining_coins=?
+    `UPDATE matches SET revealed_mask=?, guessed_letters=?, used_vowel=?, status=?
      WHERE id=?`,
-    [newMask, newGuessed, (mm.used_vowel || isVowel) ? 1 : 0, status, newCoins, mm.id]
+    [newMask, newGuessed, (mm.used_vowel || isVowel) ? 1 : 0, status, mm.id]
   );
 
-  if (mm.user_id) await db.run('UPDATE users SET coins=? WHERE id=?', [newCoins, mm.user_id]);
+  if (mm.user_id && newCoins !== null) await db.run('UPDATE users SET coins=? WHERE id=?', [newCoins, mm.user_id]);
 
   const updated = await db.get('SELECT * FROM matches WHERE id=?', [mm.id]);
   return { match: await getMatchSafe(updated), message };
@@ -182,22 +178,26 @@ export async function guessSentence({ matchId, userId = null, sentence }) {
   const ok = S === sentence.toUpperCase();
 
   let newMask = mm.revealed_mask;
-  let newCoins = mm.remaining_coins;
   let status = mm.status;
   let message = 'Wrong sentence. Keep trying!';
 
+  // Gestione coins - prendi i coins attuali dall'utente
+  let newCoins = null;
   if (ok) {
     newMask = [...S].map(_ => '1').join('');
     status = 'won';
     message = 'Correct sentence! +100 coins if logged in.';
-    if (mm.user_id) newCoins = (newCoins ?? 0) + 100;
+    if (mm.user_id) {
+      const currentCoins = await getUserCoins(mm.user_id);
+      newCoins = currentCoins + 100;
+    }
   }
 
   await db.run(
-    'UPDATE matches SET revealed_mask=?, status=?, remaining_coins=? WHERE id=?',
-    [newMask, status, newCoins, mm.id]
+    'UPDATE matches SET revealed_mask=?, status=? WHERE id=?',
+    [newMask, status, mm.id]
   );
-  if (mm.user_id) await db.run('UPDATE users SET coins=? WHERE id=?', [newCoins, mm.user_id]);
+  if (mm.user_id && newCoins !== null) await db.run('UPDATE users SET coins=? WHERE id=?', [newCoins, mm.user_id]);
 
   const updated = await db.get('SELECT * FROM matches WHERE id=?', [mm.id]);
   return { match: await getMatchSafe(updated), message };
