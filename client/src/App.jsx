@@ -1,13 +1,14 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, createContext, useContext } from 'react';
 import { useAuth } from './contexts/AuthContext.jsx';
-import { Container, Row, Col, Modal, Button } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import LoginPage from './pages/Login.jsx';
 import RegisterPage from './pages/Register.jsx';
 import PlayPage from './pages/Play.jsx';
 import GuestPage from './pages/Guest.jsx';
 import Butterfly from './components/Butterfly.jsx';
 import HomePage from './pages/Home.jsx';
+import AbandonMatchModal from './components/AbandonMatchModal.jsx';
 import './App.css';
 
 // Context for sharing match abandon functionality
@@ -174,27 +175,16 @@ function App() {
         )}
 
         {/* Home Abandon Confirmation Modal */}
-        <Modal show={showHomeAbandonModal} onHide={cancelHomeAbandon} centered>
-          <Modal.Header closeButton>
-            <Modal.Title>🏠 Return to Home</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p>Are you sure you want to abandon this match and return to the home page?</p>
-            <div className="alert alert-warning" role="alert">
-              <small>
-                ⚠️ <strong>Warning:</strong> You will lose your progress and the sentence will not be revealed.
-              </small>
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={cancelHomeAbandon}>
-              No, Continue Playing
-            </Button>
-            <Button variant="primary" onClick={confirmHomeAbandon}>
-              Yes, Go to Home
-            </Button>
-          </Modal.Footer>
-        </Modal>
+        <AbandonMatchModal
+          show={showHomeAbandonModal}
+          onConfirm={confirmHomeAbandon}
+          onCancel={cancelHomeAbandon}
+          title="🏠 Return to Home"
+          message="Are you sure you want to abandon this match and return to the home page?"
+          confirmText="Yes, Go to Home"
+          cancelText="No, Continue Playing"
+          showWarning={true}
+        />
       </Container>
     </div>
     </MatchContext.Provider>
