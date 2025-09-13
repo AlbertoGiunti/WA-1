@@ -254,6 +254,13 @@ export async function guessSentence({ matchId, userId = null, sentence }) {
   return { match: await getMatchSafe(updated), message };
 }
 
+/**
+ * Abandons a match without revealing the sentence
+ * @param {Object} params - Parameters
+ * @param {number} params.matchId - Match ID
+ * @param {number|null} params.userId - User ID (null for guest)
+ * @returns {Object} Result with updated match and message
+ */
 export async function abandonMatch({ matchId, userId = null }) {
   const db = await getDb();
   const m = await db.get('SELECT * FROM matches WHERE id=?', [matchId]);

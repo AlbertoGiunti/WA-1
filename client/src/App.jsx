@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, createContext, useContext } from 'react';
 import { useAuth } from './contexts/AuthContext.jsx';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Modal, Button } from 'react-bootstrap';
 import LoginPage from './pages/Login.jsx';
 import RegisterPage from './pages/Register.jsx';
 import PlayPage from './pages/Play.jsx';
@@ -10,11 +10,24 @@ import Butterfly from './components/Butterfly.jsx';
 import HomePage from './pages/Home.jsx';
 import './App.css';
 
-function NavigationBar({ user, onLogout }) {
+// Context for sharing match abandon functionality
+const MatchContext = createContext(null);
+export const useMatchContext = () => useContext(MatchContext);
+
+function NavigationBar({ user, onLogout, onHomeClick }) {
+  const handleHomeClick = (e) => {
+    e.preventDefault();
+    if (onHomeClick) {
+      onHomeClick();
+    } else {
+      window.location.href = '/';
+    }
+  };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       <div className="container-fluid">
-        <a className="navbar-brand fw-bold" href="/" style={{ fontSize: '1.5rem' }}>
+        <a className="navbar-brand fw-bold" href="/" onClick={handleHomeClick} style={{ fontSize: '1.5rem' }}>
           🎮 Guess the Sentence
         </a>
         <div className="navbar-nav ms-auto">
@@ -45,6 +58,8 @@ function NavigationBar({ user, onLogout }) {
 function App() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const [currentMatch, setCurrentMatch] = useState(null);
+  const [showHomeAbandonModal, setShowHomeAbandonModal] = useState(false);
   
   // Check if we're on a game page (play or guest)
   const isGamePage = location.pathname === '/play' || location.pathname === '/guest';
@@ -53,17 +68,60 @@ function App() {
     try {
       await logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Logout failed:', error);
     }
   };
 
+  const handleHomeClick = () => {
+    // If there's an active match, show confirmation modal
+    if (currentMatch && currentMatch.status === 'playing') {
+      setShowHomeAbandonModal(true);
+    } else {
+      // No active match, navigate normally
+      window.location.href = '/';
+    }
+  };
+
+  const confirmHomeAbandon = async () => {
+    // Abandon the match and go home
+    const isGuest = location.pathname === '/guest';
+    const abandonUrl = isGuest 
+      ? `/api/guest/matches/${currentMatch.id}/abandon`
+      : `/api/matches/${currentMatch.id}/abandon`;
+    
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:3001'}${abandonUrl}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      console.error('Failed to abandon match:', error);
+    } finally {
+      // Navigate home regardless of abandon success/failure
+      setShowHomeAbandonModal(false);
+      window.location.href = '/';
+    }
+  };
+
+  const cancelHomeAbandon = () => {
+    setShowHomeAbandonModal(false);
+  };
+
+  const matchContextValue = {
+    currentMatch,
+    setCurrentMatch
+  };
+
   return (
-    <div className="App">
-      <NavigationBar 
-        user={user} 
-        onLogout={handleLogout}
-      />
-      <Container fluid className="flex-grow-1 mt-3 px-2">
+    <MatchContext.Provider value={matchContextValue}>
+      <div className="App">
+        <NavigationBar 
+          user={user} 
+          onLogout={handleLogout}
+          onHomeClick={isGamePage ? handleHomeClick : null}
+        />
+        <Container fluid className="flex-grow-1 mt-3 px-2">
         {isGamePage ? (
           // Full-width layout for game pages
           <>
@@ -114,8 +172,32 @@ function App() {
             </Col>
           </Row>
         )}
+
+        {/* Home Abandon Confirmation Modal */}
+        <Modal show={showHomeAbandonModal} onHide={cancelHomeAbandon} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>🏠 Return to Home</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p>Are you sure you want to abandon this match and return to the home page?</p>
+            <div className="alert alert-warning" role="alert">
+              <small>
+                ⚠️ <strong>Warning:</strong> You will lose your progress and the sentence will not be revealed.
+              </small>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={cancelHomeAbandon}>
+              No, Continue Playing
+            </Button>
+            <Button variant="primary" onClick={confirmHomeAbandon}>
+              Yes, Go to Home
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </Container>
     </div>
+    </MatchContext.Provider>
   );
 }
 

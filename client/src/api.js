@@ -57,5 +57,7 @@ export const api = {
   login, register, me, logout, meSnapshot,
   getButterfly, getLetterCosts,
   startMatch, currentMatch, guessLetter, guessSentence, abandonMatch,
-  guestStart, guestCurrent, guestGuessLetter, guestGuessSentence, guestAbandon
+  guestStart, guestCurrent, guestGuessLetter, guestGuessSentence, guestAbandon,
+  // Aliases for consistency
+  abandonGuestMatch: guestAbandon
 };

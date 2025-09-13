@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { Container, Row, Col, Card, Button, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Badge, Modal } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { useMatchContext } from '../App.jsx';
 import Keyboard from '../components/Keyboard.jsx';
 import Grid from '../components/Grid.jsx';
 import GuessSentence from '../components/GuessSentence.jsx';
@@ -9,16 +11,25 @@ import useTick from '../hooks/useTick.js';
 
 export default function PlayPage() {
   const { syncCoins, user } = useAuth();
+  const { setCurrentMatch } = useMatchContext();
+  const navigate = useNavigate();
   const [match, setMatch] = useState(null);
   const [msg, setMsg] = useState('');
+  const [showAbandonModal, setShowAbandonModal] = useState(false);
+
+  const updateMatch = useCallback((newMatch) => {
+    setMatch(newMatch);
+    setCurrentMatch(newMatch);
+  }, [setCurrentMatch]);
 
   const loadCurrent = useCallback(async () => {
     try { 
-      setMatch(await api.currentMatch()); 
+      const currentMatch = await api.currentMatch();
+      updateMatch(currentMatch);
     } catch { 
-      setMatch(null); 
+      updateMatch(null);
     }
-  }, []);
+  }, [updateMatch]);
 
   useEffect(() => { 
     loadCurrent(); 
@@ -27,7 +38,7 @@ export default function PlayPage() {
   const onStart = async () => {
     try {
       const m = await api.startMatch();
-      setMatch(m);
+      updateMatch(m);
       setMsg('Match started! Good luck! 🍀');
       await syncCoins();
     } catch (e) { 
@@ -48,7 +59,7 @@ export default function PlayPage() {
     if (!match || finished) return;
     try {
       const r = await api.guessLetter(match.id, L);
-      setMatch(r.match);
+      updateMatch(r.match);
       setMsg(r.message);
       await syncCoins();
     } catch (e) { 
@@ -60,7 +71,7 @@ export default function PlayPage() {
     if (!match || finished) return;
     try {
       const r = await api.guessSentence(match.id, s.toUpperCase());
-      setMatch(r.match);
+      updateMatch(r.match);
       setMsg(r.message);
       await syncCoins();
     } catch (e) { 
@@ -68,15 +79,26 @@ export default function PlayPage() {
     }
   };
 
-  const abandon = async () => {
+  const handleAbandonClick = () => {
+    setShowAbandonModal(true);
+  };
+
+  const confirmAbandon = async () => {
     if (!match || finished) return;
     try {
       const r = await api.abandonMatch(match.id);
-      setMatch(r.match);
-      setMsg(r.message);
+      updateMatch(r.match);
+      setShowAbandonModal(false);
+      // Navigate to home after abandoning
+      navigate('/');
     } catch (e) { 
       setMsg(`Error: ${e.message}`); 
+      setShowAbandonModal(false);
     }
+  };
+
+  const cancelAbandon = () => {
+    setShowAbandonModal(false);
   };
 
   return (
@@ -156,7 +178,7 @@ export default function PlayPage() {
                       <Button 
                         variant="outline-danger" 
                         size="sm"
-                        onClick={abandon} 
+                        onClick={handleAbandonClick} 
                         disabled={finished}
                       >
                         🏃‍♂️ Abandon
@@ -175,6 +197,29 @@ export default function PlayPage() {
               />
             </>
           )}
+
+          {/* Abandon Confirmation Modal */}
+          <Modal show={showAbandonModal} onHide={cancelAbandon} centered>
+            <Modal.Header closeButton>
+              <Modal.Title>🚨 Abandon Match</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>Are you sure you want to abandon this match and return to the home page?</p>
+              <div className="alert alert-warning" role="alert">
+                <small>
+                  ⚠️ <strong>Warning:</strong> You will lose your progress and the sentence will not be revealed.
+                </small>
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={cancelAbandon}>
+                No, Continue Playing
+              </Button>
+              <Button variant="danger" onClick={confirmAbandon}>
+                Yes, Go to Home
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </Col>
       </Row>
       </Container>
