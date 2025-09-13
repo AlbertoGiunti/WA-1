@@ -25,7 +25,7 @@ export default function Game({ isGuest = false }) {
 
   // Update match state and context
   const updateMatch = useCallback((newMatch) => {
-    console.log('🔄 Updating match state:', newMatch);
+    // console.log('🔄 Updating match state:', newMatch);
     setMatch(newMatch);
     setCurrentMatch(newMatch);
   }, [setCurrentMatch]);
@@ -51,15 +51,15 @@ export default function Game({ isGuest = false }) {
   // Timeout handling
   const handleTimeout = useCallback(async () => {
     if (!match || isHandlingTimeout) {
-      console.log('⏸️ Timeout already being handled or no match, skipping');
+      // console.log('⏸️ Timeout already being handled or no match, skipping');
       return;
     }
 
     setIsHandlingTimeout(true);
     
     // Immediately update local state to reflect timeout
-    console.log(`🕐 ${isGuest ? 'Guest' : 'User'} timeout for match:`, match.id);
-    console.log('⚡ Immediately updating local state to lost');
+    // console.log(`🕐 ${isGuest ? 'Guest' : 'User'} timeout for match:`, match.id);
+    // console.log('⚡ Immediately updating local state to lost');
     
     const timedOutMatch = { ...match, status: 'lost' };
     updateMatch(timedOutMatch);
@@ -77,7 +77,7 @@ export default function Game({ isGuest = false }) {
         await api.guestCurrent(match.id) : 
         await api.currentMatch();
       
-      console.log('📥 Server response after timeout:', updatedMatch);
+      // console.log('📥 Server response after timeout:', updatedMatch);
       
       if (updatedMatch) {
         // Update with server data (especially if it includes the complete sentence)
@@ -120,8 +120,8 @@ export default function Game({ isGuest = false }) {
         await api.guestGuessLetter(match.id, letter) : 
         await api.guessLetter(match.id, letter);
       
-      console.log('🔤 Letter guess result:', result);
-      console.log('🔤 Match after letter guess:', result.match);
+      // console.log('🔤 Letter guess result:', result);
+      // console.log('🔤 Match after letter guess:', result.match);
       
       updateMatch(result.match); 
       setMessage(result.message);

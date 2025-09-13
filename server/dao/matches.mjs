@@ -91,7 +91,7 @@ export async function cleanupExpiredMatches() {
   const db = await getDb();
   const now = dayjs().unix();
   
-  console.log('🧹 Cleaning up expired matches...');
+  // console.log('🧹 Cleaning up expired matches...');
   
   // Find all expired playing matches
   const expiredMatches = await db.all(
@@ -99,14 +99,14 @@ export async function cleanupExpiredMatches() {
     [now]
   );
   
-  console.log(`Found ${expiredMatches.length} expired matches to clean up`);
+  // console.log(`Found ${expiredMatches.length} expired matches to clean up`);
   
   for (const match of expiredMatches) {
-    console.log(`🔄 Processing expired match ${match.id} (ended ${now - match.ends_at}s ago)`);
+    // console.log(`🔄 Processing expired match ${match.id} (ended ${now - match.ends_at}s ago)`);
     await closeIfTimeout(match);
   }
   
-  console.log('✅ Cleanup completed');
+  // console.log('✅ Cleanup completed');
 }
 
 /**
@@ -125,17 +125,17 @@ export async function startMatch({ userId = null, guest = false }) {
   const sentenceU = row.text.toUpperCase();
   
   // Debug: Print the sentence when starting a match
-  console.log(`🎮 DEBUG: Starting ${guest ? 'GUEST' : 'PLAY'} match for ${userId ? `user ${userId}` : 'guest'}`);
-  console.log(`📝 DEBUG: Selected sentence: "${row.text}"`);
+  // console.log(`🎮 DEBUG: Starting ${guest ? 'GUEST' : 'PLAY'} match for ${userId ? `user ${userId}` : 'guest'}`);
+  // console.log(`📝 DEBUG: Selected sentence: "${row.text}"`);
   
   const now = dayjs();
   const ends = now.add(MATCH_SECONDS, 'second');
   const mask = buildMask(sentenceU);
 
-  console.log(`⏰ DEBUG: Match timing:`);
-  console.log(`   - Now: ${now.unix()} (${now.format('YYYY-MM-DD HH:mm:ss')})`);
-  console.log(`   - Ends: ${ends.unix()} (${ends.format('YYYY-MM-DD HH:mm:ss')})`);
-  console.log(`   - Duration: ${MATCH_SECONDS} seconds`);
+  // console.log(`⏰ DEBUG: Match timing:`);
+  // console.log(`   - Now: ${now.unix()} (${now.format('YYYY-MM-DD HH:mm:ss')})`);
+  // console.log(`   - Ends: ${ends.unix()} (${ends.format('YYYY-MM-DD HH:mm:ss')})`);
+  // console.log(`   - Duration: ${MATCH_SECONDS} seconds`);
 
   const res = await db.run(
     `INSERT INTO matches(user_id, sentence_id, started_at, ends_at, status, revealed_mask, guessed_letters, used_vowel)
@@ -154,22 +154,22 @@ async function closeIfTimeout(m) {
   const db = await getDb();
   const now = dayjs().unix();
   
-  console.log(`🔍 TIMEOUT CHECK for match ${m.id}:`);
-  console.log(`   - Status: ${m.status}`);
-  console.log(`   - Now: ${now} (${dayjs.unix(now).format('YYYY-MM-DD HH:mm:ss')})`);
-  console.log(`   - Ends at: ${m.ends_at} (${dayjs.unix(m.ends_at).format('YYYY-MM-DD HH:mm:ss')})`);
-  console.log(`   - Time remaining: ${m.ends_at - now} seconds`);
+  // console.log(`🔍 TIMEOUT CHECK for match ${m.id}:`);
+  // console.log(`   - Status: ${m.status}`);
+  // console.log(`   - Now: ${now} (${dayjs.unix(now).format('YYYY-MM-DD HH:mm:ss')})`);
+  // console.log(`   - Ends at: ${m.ends_at} (${dayjs.unix(m.ends_at).format('YYYY-MM-DD HH:mm:ss')})`);
+  // console.log(`   - Time remaining: ${m.ends_at - now} seconds`);
   
   if (m.status !== 'playing') {
-    console.log(`   ✅ Match not playing, skipping timeout check`);
+    // console.log(`   ✅ Match not playing, skipping timeout check`);
     return m;
   }
   if (now < m.ends_at) {
-    console.log(`   ✅ Match still active, no timeout`);
+    // console.log(`   ✅ Match still active, no timeout`);
     return m;
   }
 
-  console.log(`⏰ Match ${m.id} has timed out! Applying penalty...`);
+  // console.log(`⏰ Match ${m.id} has timed out! Applying penalty...`);
 
   if (m.user_id) {
     // Get current user coins from the users table
@@ -177,17 +177,17 @@ async function closeIfTimeout(m) {
     const penalty = Math.min(TIME_PENALTY, currentCoins);
     const newCoins = Math.max(0, currentCoins - penalty);
     
-    console.log(`💰 User ${m.user_id}: ${currentCoins} → ${newCoins} coins (penalty: ${penalty})`);
+    // console.log(`💰 User ${m.user_id}: ${currentCoins} → ${newCoins} coins (penalty: ${penalty})`);
     
     await db.run('UPDATE users SET coins=? WHERE id=?', [newCoins, m.user_id]);
     await db.run('UPDATE matches SET status="lost" WHERE id=?', [m.id]);
   } else {
-    console.log(`👤 Guest match ${m.id} timed out (no penalty)`);
+    // console.log(`👤 Guest match ${m.id} timed out (no penalty)`);
     await db.run('UPDATE matches SET status="lost" WHERE id=?', [m.id]);
   }
   
   const updatedMatch = await db.get('SELECT * FROM matches WHERE id=?', [m.id]);
-  console.log(`✅ Match ${m.id} status updated to: ${updatedMatch.status}`);
+  // console.log(`✅ Match ${m.id} status updated to: ${updatedMatch.status}`);
   return updatedMatch;
 }
 
@@ -202,7 +202,7 @@ export async function getMatchSafe(m) {
   const s = await db.get('SELECT text FROM sentences WHERE id=?', [m.sentence_id]);
   const sentenceU = s.text.toUpperCase();
 
-  console.log(`🔤 DEBUG: Full sentence for match ${m.id}: "${s.text}" (${sentenceU})`);
+  // console.log(`🔤 DEBUG: Full sentence for match ${m.id}: "${s.text}" (${sentenceU})`);
 
   const revealed = [...sentenceU].map((ch, i) => {
     if (ch === ' ') return null;                             // spaces always null
@@ -213,7 +213,7 @@ export async function getMatchSafe(m) {
   const fullSentence = (m.status !== 'playing' && m.status !== 'abandoned') ? sentenceU : null;
   
   if (fullSentence) {
-    console.log(`🏁 DEBUG: Game finished, revealing full sentence: "${fullSentence}"`);
+    // console.log(`🏁 DEBUG: Game finished, revealing full sentence: "${fullSentence}"`);
   }
 
   const result = {

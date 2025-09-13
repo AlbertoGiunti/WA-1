@@ -27,7 +27,7 @@ export default function Timer({ match, onTimeUp }) {
   // Call onTimeUp callback when time runs out (only once)
   useEffect(() => {
     if (timeUp && match && match.status === 'playing' && onTimeUp && !timeoutHandled.current) {
-      console.log('⏰ Timer: Calling onTimeUp (first time)');
+      // console.log('⏰ Timer: Calling onTimeUp (first time)');
       timeoutHandled.current = true;
       onTimeUp();
     }

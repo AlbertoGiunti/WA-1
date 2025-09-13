@@ -33,12 +33,12 @@ export default function GameInterface({
 
   // Build revealed letters array based on mask and sentence
   const revealedLetters = useMemo(() => {
-    console.log('🔍 useMemo buildRevealedLetters called:');
-    console.log('   - finished:', finished);
-    console.log('   - match.revealed:', match.revealed);
-    console.log('   - match.revealedMask:', match.revealedMask);
-    console.log('   - match.sentence:', match.sentence);
-    console.log('   - match.fullSentence:', match.fullSentence);
+    // console.log('🔍 useMemo buildRevealedLetters called:');
+    // console.log('   - finished:', finished);
+    // console.log('   - match.revealed:', match.revealed);
+    // console.log('   - match.revealedMask:', match.revealedMask);
+    // console.log('   - match.sentence:', match.sentence);
+    // console.log('   - match.fullSentence:', match.fullSentence);
     
     // Get the sentence from match (needed for building from mask or when finished)
     const sentence = match.sentence || match.fullSentence;
@@ -46,22 +46,22 @@ export default function GameInterface({
     // If match is finished AND we have the complete sentence, always show it
     // This allows Grid to color letters correctly (green for guessed, red for missing)
     if (finished && sentence) {
-      console.log('🎯 Match finished with sentence, revealing complete sentence');
-      console.log('   - Sentence:', sentence);
-      console.log('   - Mask:', match.revealedMask);
-      console.log('   - Status:', match.status);
+      // console.log('🎯 Match finished with sentence, revealing complete sentence');
+      // console.log('   - Sentence:', sentence);
+      // console.log('   - Mask:', match.revealedMask);
+      // console.log('   - Status:', match.status);
       return sentence.split('');
     }
     
     // During gameplay, try to use the revealed array from server first
     if (match.revealed && Array.isArray(match.revealed)) {
-      console.log('✅ Using revealed array from server:', match.revealed);
+      // console.log('✅ Using revealed array from server:', match.revealed);
       return match.revealed;
     }
     
     // Fallback: build from mask during gameplay (if no revealed array from server)
     if (sentence && match.revealedMask) {
-      console.log('🏗️ Building revealed array from mask and sentence');
+      // console.log('🏗️ Building revealed array from mask and sentence');
       const revealed = [];
       for (let i = 0; i < match.revealedMask.length; i++) {
         if (match.revealedMask[i] === '1') {
@@ -70,11 +70,11 @@ export default function GameInterface({
           revealed[i] = null;
         }
       }
-      console.log('   - Built revealed array:', revealed);
+      // console.log('   - Built revealed array:', revealed);
       return revealed;
     }
     
-    console.log('❌ No usable data available for revealed letters');
+    // console.log('❌ No usable data available for revealed letters');
     return null;
   }, [match.sentence, match.fullSentence, match.revealed, match.revealedMask, match.status, finished]);
 
