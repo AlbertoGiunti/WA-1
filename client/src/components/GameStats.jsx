@@ -14,7 +14,7 @@ export default function GameStats({ match, isGuest }) {
         <h6 className="text-muted mb-1">Letters Used</h6>
         <div className="fs-5">
           📝 {match.guessedLetters?.length || 0}
-          {!isGuest && match.usedVowel && (
+          {match.usedVowel && (
             <Badge bg="info" className="ms-2">Vowel Used</Badge>
           )}
         </div>
