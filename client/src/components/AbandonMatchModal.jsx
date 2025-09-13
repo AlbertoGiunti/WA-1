@@ -23,19 +23,30 @@ const AbandonMatchModal = ({
   message, 
   confirmText = "Abandon",
   cancelText = "Cancel",
-  showWarning = false
+  showWarning = false,
+  isGuest = false  // New prop for guest mode
 }) => {
+  
+  // Default values based on mode
+  const defaultTitle = isGuest ? "🏃‍♂️ Leave Game?" : "🏃‍♂️ Abandon Match?";
+  const defaultMessage = isGuest 
+    ? "Are you sure you want to leave this game? Your progress will be lost."
+    : "Are you sure you want to abandon this match? You'll lose coins and the match will be marked as lost.";
+  
+  const modalTitle = title || defaultTitle;
+  const modalMessage = message || defaultMessage;
   return (
     <Modal show={show} onHide={onCancel} centered>
       <Modal.Header closeButton>
-        <Modal.Title>{title}</Modal.Title>
+        <Modal.Title>{modalTitle}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p>{message}</p>
+        <p>{modalMessage}</p>
         {showWarning && (
           <div className="alert alert-warning" role="alert">
             <small>
               ⚠️ <strong>Warning:</strong> You will lose your progress and the sentence will not be revealed.
+              {!isGuest && " You will also lose coins as penalty."}
             </small>
           </div>
         )}

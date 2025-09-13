@@ -26,6 +26,13 @@ export default function Grid({ mask, spaces, revealed, sentence, finished }) {
   }
 
   function renderSentence() {
+    if (finished) {
+      console.log('🎯 Grid rendering finished game:');
+      console.log('   - Mask:', mask);
+      console.log('   - Revealed:', revealed);
+      console.log('   - Sentence:', sentence);
+    }
+    
     const out = [];
     for (let i = 0; i < mask.length; i++) {
       const isSpace = spaces[i];

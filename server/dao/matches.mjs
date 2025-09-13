@@ -164,7 +164,7 @@ async function closeIfTimeout(m) {
     console.log(`   ✅ Match not playing, skipping timeout check`);
     return m;
   }
-  if (now <= m.ends_at) {
+  if (now < m.ends_at) {
     console.log(`   ✅ Match still active, no timeout`);
     return m;
   }
