@@ -1,6 +1,5 @@
 import { Row, Col } from 'react-bootstrap';
 import PlayerInfo from './PlayerInfo.jsx';
-import Timer from './Timer.jsx';
 import GameStats from './GameStats.jsx';
 
 /**
@@ -14,20 +13,13 @@ export default function GameHeader({ isGuest, user, match, onTimeUp }) {
   return (
     <Row className="mb-4">
       {/* Player Info */}
-      <Col md={4}>
+      <Col md={6}>
         <PlayerInfo isGuest={isGuest} user={user} />
       </Col>
       
-      {/* Timer - only show when match is active */}
-      {match && (
-        <Col md={4}>
-          <Timer match={match} onTimeUp={onTimeUp} />
-        </Col>
-      )}
-      
       {/* Game Stats - only show when match is active */}
       {match && (
-        <Col md={4}>
+        <Col md={6}>
           <GameStats match={match} isGuest={isGuest} />
         </Col>
       )}

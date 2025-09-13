@@ -1,28 +1,24 @@
-import { Card, Badge } from 'react-bootstrap';
+import { Badge } from 'react-bootstrap';
 
 /**
- * PlayerInfo component - Displays player information (coins, guest mode, etc.)
+ * PlayerInfo component - Displays player information as badges (username/guest, coins)
  * @param {boolean} isGuest - Whether this is a guest player
- * @param {Object} user - User object with coins information
+ * @param {Object} user - User object with username and coins information
  */
 export default function PlayerInfo({ isGuest, user }) {
   return (
-    <Card className="text-center">
-      <Card.Body>
-        <h6 className="text-muted mb-1">
-          {isGuest ? 'Guest Mode' : 'Player'}
-        </h6>
-        <div className="fs-5">
-          {isGuest ? (
-            <Badge bg="secondary">👤 Guest</Badge>
-          ) : (
-            <>
-              <span className="me-2">💰</span>
-              {user?.coins || 0}
-            </>
-          )}
-        </div>
-      </Card.Body>
-    </Card>
+    <div className="d-flex align-items-center gap-2">
+      {/* Username or Guest badge */}
+      <Badge bg={isGuest ? "secondary" : "primary"} className="fs-6">
+        {isGuest ? "👤 Guest" : user?.username || "Player"}
+      </Badge>
+      
+      {/* Coins badge - only for authenticated users */}
+      {!isGuest && (
+        <Badge bg="success" className="fs-6">
+          💰 Coins: {user?.coins || 0}
+        </Badge>
+      )}
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import Grid from './Grid.jsx';
 import Keyboard from './Keyboard.jsx';
 import GuessSentence from './GuessSentence.jsx';
 import GameControls from './GameControls.jsx';
+import Timer from './Timer.jsx';
 
 /**
  * GameInterface component - Displays the main game interface
@@ -15,6 +16,7 @@ import GameControls from './GameControls.jsx';
  * @param {Function} onGuessSentence - Callback for sentence guess
  * @param {Function} onAbandon - Callback for abandon action
  * @param {Function} onGoHome - Callback for going home
+ * @param {Function} onTimeUp - Callback when time runs out
  */
 export default function GameInterface({ 
   match, 
@@ -22,9 +24,10 @@ export default function GameInterface({
   isGuest, 
   message, 
   onGuessLetter, 
-  onGuessSentence, 
+  onGuessSentence,
   onAbandon, 
-  onGoHome 
+  onGoHome,
+  onTimeUp
 }) {
   if (!match) return null;
 
@@ -101,36 +104,40 @@ export default function GameInterface({
         className="mb-4"
       />
 
-      {/* Game Controls */}
-      <Row className="mb-4">
-        <Col md={8}>
-          <Row>
-            <Col>
-              <Keyboard 
-                onPick={onGuessLetter} 
-                guessed={new Set(match.guessedLetters || [])} 
-                usedVowel={match.usedVowel}
-                disabled={finished}
-                showCosts={!isGuest} // Only show costs for authenticated users
-              />
-            </Col>
-          </Row>
-          <Row className="mt-3">
-            <Col>
-              <GuessSentence 
-                disabled={finished} 
-                onGuess={onGuessSentence} 
-                compact={true} 
-              />
-            </Col>
-          </Row>
+      {/* Timer, Guess Sentence Input and Game Controls */}
+      <Row className="mb-3 justify-content-center align-items-center">
+        <Col md={2}>
+          <Timer 
+            match={match} 
+            onTimeUp={onTimeUp}
+          />
         </Col>
-        <Col md={4}>
+        <Col md={6}>
+          <GuessSentence 
+            disabled={finished} 
+            onGuess={onGuessSentence} 
+            compact={true}
+          />
+        </Col>
+        <Col md={2}>
           <GameControls 
             match={match}
             finished={finished}
             onAbandon={onAbandon}
             onGoHome={onGoHome}
+          />
+        </Col>
+      </Row>
+
+      {/* Virtual Keyboard */}
+      <Row className="mb-4 justify-content-center">
+        <Col>
+          <Keyboard 
+            onPick={onGuessLetter} 
+            guessed={new Set(match.guessedLetters || [])} 
+            usedVowel={match.usedVowel}
+            disabled={finished}
+            showCosts={!isGuest} // Only show costs for authenticated users
           />
         </Col>
       </Row>

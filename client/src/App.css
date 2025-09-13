@@ -267,7 +267,7 @@
 .card {
   border: none;
   border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(232, 152, 5, 0.1);
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
 }
@@ -429,7 +429,7 @@
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
   .card {
-    background: rgba(30, 30, 30, 0.95);
+    background: rgba(0, 0, 0, 0.95);
     color: #fff;
   }
   
@@ -464,4 +464,21 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Timer Styling */
+.timer-display {
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 25px;
+  background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  animation: timer-pulse 2s infinite;
+}
+
+.timer-warning {
+  animation: timer-danger 1s infinite;
+  background: linear-gradient(45deg, #f44336, #da190b) !important;
 }

@@ -1,5 +1,4 @@
 import { useMemo, useEffect, useRef } from 'react';
-import { Card } from 'react-bootstrap';
 import useTick from '../hooks/useTick.js';
 
 /**
@@ -43,13 +42,8 @@ export default function Timer({ match, onTimeUp }) {
   if (!match) return null;
 
   return (
-    <Card className="text-center">
-      <Card.Body>
-        <h6 className="text-muted mb-1">Time Left</h6>
-        <div className={`fs-4 ${timeUp ? 'text-danger' : secondsLeft <= 10 ? 'text-warning' : 'text-success'}`}>
-          ⏰ {formatTime(secondsLeft)}
-        </div>
-      </Card.Body>
-    </Card>
+    <div className={`timer-display ${secondsLeft <= 10 ? 'timer-warning' : ''}`}>
+      ⏰ {secondsLeft ?? '-'}s
+    </div>
   );
 }

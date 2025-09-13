@@ -188,13 +188,12 @@ export default function Game({ isGuest = false }) {
   return (
     <Container className="fade-in-up">
       <Row className="justify-content-center">
-        <Col lg={10}>
-          {/* Game Header - Player info, timer, stats */}
+        <Col lg={11}>
+          {/* Game Header - Player info, stats */}
           <GameHeader 
             isGuest={isGuest}
             user={user}
             match={match}
-            onTimeUp={handleTimeout}
           />
 
           {/* Ready to Play Screen */}
@@ -217,6 +216,7 @@ export default function Game({ isGuest = false }) {
               onGuessSentence={guessSentence}
               onAbandon={handleAbandonClick}
               onGoHome={goToHome}
+              onTimeUp={handleTimeout}
             />
           )}
 

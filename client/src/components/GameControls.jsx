@@ -11,11 +11,10 @@ export default function GameControls({ match, finished, onAbandon, onGoHome }) {
   if (!match) return null;
 
   return (
-    <div className="d-flex align-items-start justify-content-end">
+    <div className="d-flex justify-content-center">
       {(match.status === 'won' || match.status === 'lost') ? (
         <Button 
           variant={match.status === 'won' ? 'success' : 'danger'} 
-          size="sm"
           onClick={onGoHome}
         >
           🏠 Home
@@ -23,7 +22,6 @@ export default function GameControls({ match, finished, onAbandon, onGoHome }) {
       ) : (
         <Button 
           variant="outline-danger" 
-          size="sm"
           onClick={onAbandon} 
           disabled={finished}
         >
