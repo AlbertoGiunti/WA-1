@@ -46,7 +46,7 @@ export default function PlayPage() {
     }
   };
 
-  const now = useTick(500);
+  const now = useTick(500, match && match.status === 'playing');
   const secondsLeft = useMemo(() => {
     if (!match) return null;
     return Math.max(0, match.endsAt - Math.floor(now / 1000));
@@ -99,6 +99,12 @@ export default function PlayPage() {
 
   const cancelAbandon = () => {
     setShowAbandonModal(false);
+  };
+
+  const goToHome = () => {
+    // Clear match context and navigate to home
+    setCurrentMatch(null);
+    navigate('/');
   };
 
   return (
@@ -175,14 +181,24 @@ export default function PlayPage() {
                       <GuessSentence disabled={finished} onGuess={playSentence} compact={true} />
                     </Col>
                     <Col md={2} className="text-end">
-                      <Button 
-                        variant="outline-danger" 
-                        size="sm"
-                        onClick={handleAbandonClick} 
-                        disabled={finished}
-                      >
-                        🏃‍♂️ Abandon
-                      </Button>
+                      {match.status === 'won' ? (
+                        <Button 
+                          variant="success" 
+                          size="sm"
+                          onClick={goToHome}
+                        >
+                          🏠 Home
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="outline-danger" 
+                          size="sm"
+                          onClick={handleAbandonClick} 
+                          disabled={finished}
+                        >
+                          🏃‍♂️ Abandon
+                        </Button>
+                      )}
                     </Col>
                   </Row>
                 </Card.Body>

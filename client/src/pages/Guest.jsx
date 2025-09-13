@@ -30,7 +30,7 @@ export default function GuestPage() {
     }
   };
 
-  const now = useTick(500);
+  const now = useTick(500, match && match.status === 'playing');
   const secondsLeft = useMemo(() => {
     if (!match) return null;
     return Math.max(0, match.endsAt - Math.floor(now / 1000));
@@ -102,6 +102,12 @@ export default function GuestPage() {
     setShowAbandonModal(false);
   };
 
+  const goToHome = () => {
+    // Clear match context and navigate to home
+    setCurrentMatch(null);
+    navigate('/');
+  };
+
   return (
     <div className="page-content">
       <Container className="fade-in-up">
@@ -165,14 +171,24 @@ export default function GuestPage() {
                       <GuessSentence disabled={finished} onGuess={guess} compact={true} />
                     </Col>
                     <Col md={2} className="text-end">
-                      <Button 
-                        variant="outline-danger" 
-                        size="sm"
-                        onClick={handleAbandonClick} 
-                        disabled={finished}
-                      >
-                        🏃‍♂️ Abandon
-                      </Button>
+                      {match.status === 'won' ? (
+                        <Button 
+                          variant="success" 
+                          size="sm"
+                          onClick={goToHome}
+                        >
+                          🏠 Home
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="outline-danger" 
+                          size="sm"
+                          onClick={handleAbandonClick} 
+                          disabled={finished}
+                        >
+                          🏃‍♂️ Abandon
+                        </Button>
+                      )}
                     </Col>
                   </Row>
                 </Card.Body>
