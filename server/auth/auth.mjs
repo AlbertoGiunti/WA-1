@@ -1,36 +1,42 @@
+/**
+ * Authentication setup using Passport.js
+ * Configures local strategy for username/password authentication
+ */
+
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
-import crypto from 'crypto';
-import { getDb } from './db.mjs';
+import { findByUsername, getById, verifyPassword } from '../dao/users.mjs';
 
-function verifyPassword(password, salt, hash) {
-  const h = crypto.scryptSync(password, salt, 64).toString('hex');
-  return crypto.timingSafeEqual(Buffer.from(h, 'hex'), Buffer.from(hash, 'hex'));
-}
-
+/**
+ * Sets up Passport.js authentication with local strategy
+ * @returns {Object} Configured passport instance
+ */
 export function setupPassport() {
   passport.use(new LocalStrategy(async (username, password, done) => {
     try {
-      const db = await getDb();
-      const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
+      const user = await findByUsername(username);
       if (!user) return done(null, false, { message: 'Invalid credentials' });
+      
       if (!verifyPassword(password, user.salt, user.password_hash))
         return done(null, false, { message: 'Invalid credentials' });
+      
       return done(null, { id: user.id, username: user.username });
-    } catch (err) { return done(err); }
+    } catch (err) { 
+      return done(err); 
+    }
   }));
 
   passport.serializeUser((user, done) => done(null, user.id));
 
   passport.deserializeUser(async (id, done) => {
     try {
-      const db = await getDb();
-      const u = await db.get('SELECT id, username, coins FROM users WHERE id=?', [id]);
+      const u = await getById(id);
       if (!u) return done(null, false);
       done(null, { id: u.id, username: u.username, coins: u.coins });
-    } catch (e) { done(e); }
+    } catch (e) { 
+      done(e); 
+    }
   });
 
   return passport;
 }
-

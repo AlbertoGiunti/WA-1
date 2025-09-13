@@ -1,3 +1,8 @@
+/**
+ * Domain logic for letter frequency, costs, and butterfly generation
+ * Contains the core business rules for letter pricing and frequency calculations
+ */
+
 // Indicative frequencies (for Butterfly component)
 export const letterFrequency = {
   E:12.7, T:9.1, A:8.2, O:7.5, I:7.0, N:6.7, S:6.3, H:6.1, R:6.0, D:4.3,
@@ -13,6 +18,11 @@ const tier3 = new Set(['U','M','W','F']);
 const tier2 = new Set(['G','Y','P','B','V','K']);
 const tier1 = new Set(['J','X','Q','Z']);
 
+/**
+ * Calculates the cost of a letter based on its frequency tier
+ * @param {string} ch - Letter to calculate cost for
+ * @returns {number} Cost in coins (1-10)
+ */
 export function letterCost(ch) {
   const c = ch.toUpperCase();
   if (vowels.has(c)) return 10;
@@ -24,6 +34,11 @@ export function letterCost(ch) {
   return 2; // default for safety
 }
 
+/**
+ * Generates random letters for the butterfly component
+ * @param {number} n - Number of letters to generate
+ * @returns {Array} Array of letter objects with frequency and cost
+ */
 export function randomButterfly(n=10) {
   const letters = Object.keys(letterFrequency);
   const set = new Set();
@@ -33,4 +48,3 @@ export function randomButterfly(n=10) {
   }
   return [...set].map(l => ({ letter: l, frequency: letterFrequency[l], cost: letterCost(l) }));
 }
-

@@ -7,13 +7,14 @@ import morgan from 'morgan';
 import dayjs from 'dayjs';
 import { body, param, validationResult } from 'express-validator';
 
-import { setupPassport } from './auth.mjs';
+import { setupPassport } from './auth/auth.mjs';
 import { initDb, getDb } from './db.mjs';
-import { randomButterfly, letterCost } from './letters.mjs';
+import { randomButterfly, letterCost } from './domain/letters.mjs';
+import { createUser, getUserCoins } from './dao/users.mjs';
 import {
   startMatch, currentMatch, getMatchSafe,
-  guessLetter, guessSentence, abandonMatch, getUserCoins
-} from './dao.mjs';
+  guessLetter, guessSentence, abandonMatch
+} from './dao/matches.mjs';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -81,7 +82,6 @@ app.post(
   handleValidation,
   async (req, res, next) => {
     try {
-      const { createUser } = await import('./users.mjs');
       const u = await createUser(req.body.username, req.body.password);
       return res.status(201).json({ id: u.id, username: u.username, coins: 100 });
     } catch (e) {

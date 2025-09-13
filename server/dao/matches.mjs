@@ -1,6 +1,12 @@
+/**
+ * Data Access Object for match-related database operations
+ * Contains all SQL queries and match management functions
+ */
+
 import dayjs from 'dayjs';
-import { getDb } from './db.mjs';
-import { letterCost } from './letters.mjs';
+import { getDb } from '../db.mjs';
+import { letterCost } from '../domain/letters.mjs';
+import { getUserCoins } from './users.mjs';
 
 // Game configuration constants
 const MATCH_SECONDS = 60;  // Duration of each game match in seconds
@@ -45,17 +51,6 @@ function isAllRevealed(mask, sentenceU) {
 }
 
 /**
- * Gets the current coin balance for a user
- * @param {number} userId - User ID
- * @returns {number} Current coin balance
- */
-export async function getUserCoins(userId) {
-  const db = await getDb();
-  const u = await db.get('SELECT coins FROM users WHERE id=?', [userId]);
-  return u?.coins ?? 0;
-}
-
-/**
  * Gets the currently active match for a user or guest
  * @param {number|null} userId - User ID (null for guest)
  * @returns {Object|null} Active match object or null
@@ -83,6 +78,10 @@ export async function startMatch({ userId = null, guest = false }) {
     [guest ? 1 : 0]
   );
   const sentenceU = row.text.toUpperCase();
+  
+  // Debug: Print the sentence when starting a match
+  console.log(`🎮 DEBUG: Starting ${guest ? 'GUEST' : 'PLAY'} match for ${userId ? `user ${userId}` : 'guest'}`);
+  console.log(`📝 DEBUG: Selected sentence: "${row.text}"`);
   
   const now = dayjs();
   const ends = now.add(MATCH_SECONDS, 'second');
@@ -121,6 +120,11 @@ async function closeIfTimeout(m) {
   return await db.get('SELECT * FROM matches WHERE id=?', [m.id]);
 }
 
+/**
+ * Gets a safe representation of a match for client consumption
+ * @param {Object} m - Match object
+ * @returns {Object} Safe match object with revealed information
+ */
 export async function getMatchSafe(m) {
   const db = await getDb();
   m = await closeIfTimeout(m);
@@ -142,10 +146,9 @@ export async function getMatchSafe(m) {
     revealedMask: m.revealed_mask,
     guessedLetters: m.guessed_letters.split('').filter(Boolean),
     usedVowel: !!m.used_vowel,
-    //remainingCoins: m.remaining_coins,
     spaces: [...sentenceU].map(ch => ch === ' '),
     revealed,
-    sentence: fullSentence  /* Usa 'sentence' invece di "fullSentence" per il frontend */
+    sentence: fullSentence  /* Use 'sentence' instead of "fullSentence" for the frontend */
   };
   
   return result;
@@ -215,6 +218,14 @@ export async function guessLetter({ matchId, userId = null, letter }) {
   return { match: await getMatchSafe(updated), message };
 }
 
+/**
+ * Processes a sentence guess for a game match
+ * @param {Object} params - Parameters
+ * @param {number} params.matchId - Match ID
+ * @param {number|null} params.userId - User ID (null for guest)
+ * @param {string} params.sentence - Sentence being guessed
+ * @returns {Object} Result with updated match and message
+ */
 export async function guessSentence({ matchId, userId = null, sentence }) {
   const db = await getDb();
   const m = await db.get('SELECT * FROM matches WHERE id=?', [matchId]);
