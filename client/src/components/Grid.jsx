@@ -33,16 +33,29 @@ export default function Grid({ mask, spaces, revealed, sentence, finished }) {
       // console.log('   - Sentence:', sentence);
     }
     
-    const out = [];
+    // Group letters into words to prevent word breaking
+    const words = [];
+    let currentWord = [];
+    
     for (let i = 0; i < mask.length; i++) {
       const isSpace = spaces[i];
+      
       if (isSpace) {
-        out.push(<span key={i} className="mx-2" style={{ display:'inline-block', width:16 }}>&nbsp;</span>);
+        // End current word and add it to words array
+        if (currentWord.length > 0) {
+          words.push({ type: 'word', letters: currentWord });
+          currentWord = [];
+        }
+        // Add space as separate element
+        words.push({ 
+          type: 'space', 
+          element: <span key={`space-${i}`} className="mx-2" style={{ display:'inline-block', width:16 }}>&nbsp;</span>
+        });
         continue;
       }
 
+      // Add letter to current word
       const isRevealed = mask[i] === '1';
-      // Priority: 1) letter revealed by server  2) if finished, use complete sentence  3) placeholder
       const revealedLetter = Array.isArray(revealed) ? revealed[i] : null;
       const finalLetter = revealedLetter ?? (finished && sentence ? sentence[i] : null);
 
@@ -51,17 +64,34 @@ export default function Grid({ mask, spaces, revealed, sentence, finished }) {
 
       if (finalLetter) {
         content = finalLetter;
-        className += isRevealed ? ' guessed' : ' missing'; // green if revealed, red if revealed only at match end
+        className += isRevealed ? ' guessed' : ' missing';
       } else if (!finished) {
         className += ' placeholder';
       } else {
-        // match finished but server didn't send complete sentence: keep placeholder dot
         className += ' placeholder';
       }
 
-      out.push(<span key={i} className={className}>{content}</span>);
+      currentWord.push(<span key={i} className={className}>{content}</span>);
     }
-    return out;
+    
+    // Add final word if exists
+    if (currentWord.length > 0) {
+      words.push({ type: 'word', letters: currentWord });
+    }
+    
+    // Render words as unbreakable units
+    return words.map((word, index) => {
+      if (word.type === 'space') {
+        return word.element;
+      } else {
+        // Wrap each word in a span with white-space: nowrap to prevent breaking
+        return (
+          <span key={`word-${index}`} style={{ whiteSpace: 'nowrap', display: 'inline-block' }}>
+            {word.letters}
+          </span>
+        );
+      }
+    });
   }
   
   return (

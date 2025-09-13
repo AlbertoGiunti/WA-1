@@ -83,7 +83,12 @@ app.post(
   async (req, res, next) => {
     try {
       const u = await createUser(req.body.username, req.body.password);
-      return res.status(201).json({ id: u.id, username: u.username, coins: 100 });
+      
+      // Automatically log in the user after successful registration
+      req.login(u, (err) => {
+        if (err) return next(err);
+        return res.status(201).json({ id: u.id, username: u.username, coins: 100 });
+      });
     } catch (e) {
       if (e.code === 'USERNAME_TAKEN') return res.status(409).json({ error: 'Username already taken' });
       next(e);
@@ -263,5 +268,5 @@ app.use((err, _req, res, _next) => {
 
 /* ========= Boot ========= */
 app.listen(PORT, () => {
-  // console.log(`Server listening on http://localhost:${PORT}`);
+  console.log(`Server listening on http://localhost:${PORT}`);
 });

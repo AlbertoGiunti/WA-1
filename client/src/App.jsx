@@ -61,15 +61,22 @@ function App() {
   const location = useLocation();
   const [currentMatch, setCurrentMatch] = useState(null);
   const [showHomeAbandonModal, setShowHomeAbandonModal] = useState(false);
+  const [showLogoutAbandonModal, setShowLogoutAbandonModal] = useState(false);
   
   // Check if we're on a game page (play or guest)
   const isGamePage = location.pathname === '/play' || location.pathname === '/guest';
 
   const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout failed:', error);
+    // If there's an active match, show confirmation modal
+    if (currentMatch && currentMatch.status === 'playing') {
+      setShowLogoutAbandonModal(true);
+    } else {
+      // No active match, logout normally
+      try {
+        await logout();
+      } catch (error) {
+        console.error('Logout failed:', error);
+      }
     }
   };
 
@@ -107,6 +114,37 @@ function App() {
 
   const cancelHomeAbandon = () => {
     setShowHomeAbandonModal(false);
+  };
+
+  const confirmLogoutAbandon = async () => {
+    // Abandon the match and logout
+    const isGuest = location.pathname === '/guest';
+    const abandonUrl = isGuest 
+      ? `/api/guest/matches/${currentMatch.id}/abandon`
+      : `/api/matches/${currentMatch.id}/abandon`;
+    
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:3001'}${abandonUrl}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      console.error('Failed to abandon match:', error);
+    }
+    
+    // Proceed with logout regardless of abandon success/failure
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setShowLogoutAbandonModal(false);
+    }
+  };
+
+  const cancelLogoutAbandon = () => {
+    setShowLogoutAbandonModal(false);
   };
 
   const matchContextValue = {
@@ -184,6 +222,19 @@ function App() {
           confirmText="Yes, Go to Home"
           cancelText="No, Continue Playing"
           showWarning={true}
+        />
+
+        {/* Logout Abandon Confirmation Modal */}
+        <AbandonMatchModal
+          show={showLogoutAbandonModal}
+          onConfirm={confirmLogoutAbandon}
+          onCancel={cancelLogoutAbandon}
+          title="🚪 Logout"
+          message="Are you sure you want to logout? Your current match will be abandoned and you will lose any progress made."
+          confirmText="Yes, Logout"
+          cancelText="No, Continue Playing"
+          showWarning={true}
+          isGuest={location.pathname === '/guest'}
         />
       </Container>
     </div>

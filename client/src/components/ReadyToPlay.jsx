@@ -13,7 +13,7 @@ export default function ReadyToPlay({ isGuest, onStart, message }) {
         <h2 className="mb-3">
           {isGuest ? '👤 Guest Mode' : '🎮 Ready to Play!'}
         </h2>
-        <p className="text-muted mb-4">
+        <p className="text-white mb-4">
           {isGuest 
             ? 'Play without registration - no coins, no pressure!' 
             : 'Guess the hidden sentence by revealing letters!'

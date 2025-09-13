@@ -31,7 +31,7 @@ const AbandonMatchModal = ({
   const defaultTitle = isGuest ? "🏃‍♂️ Leave Game?" : "🏃‍♂️ Abandon Match?";
   const defaultMessage = isGuest 
     ? "Are you sure you want to leave this game? Your progress will be lost."
-    : "Are you sure you want to abandon this match? You'll lose coins and the match will be marked as lost.";
+    : "Are you sure you want to abandon this match? Any coins spent will be lost and the match will be marked as abandoned.";
   
   const modalTitle = title || defaultTitle;
   const modalMessage = message || defaultMessage;
@@ -45,17 +45,17 @@ const AbandonMatchModal = ({
         {showWarning && (
           <div className="alert alert-warning" role="alert">
             <small>
-              ⚠️ <strong>Warning:</strong> You will lose your progress and the sentence will not be revealed.
-              {!isGuest && " You will also lose coins as penalty."}
+              ⚠️ <strong>Warning:</strong> You will lose your progress and the solution will not be revealed.
+              {!isGuest && " Any coins spent on this match will also be lost."}
             </small>
           </div>
         )}
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={onCancel}>
+        <Button variant="success" onClick={onCancel}>
           {cancelText}
         </Button>
-        <Button variant="primary" onClick={onConfirm}>
+        <Button variant="danger" onClick={onConfirm}>
           {confirmText}
         </Button>
       </Modal.Footer>
