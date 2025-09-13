@@ -130,7 +130,7 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
               {LETTERS.map(renderLetter)}
             </Row>
             <div className="mt-3 text-center">
-              <small className="text-muted">
+              <small className="text-white">
                 💰 Letter costs: 
                 <span style={{ color: '#0d6efd' }}> Vowels(10)</span> |
                 <span style={{ color: '#00d221' }}> Common(5)</span> |

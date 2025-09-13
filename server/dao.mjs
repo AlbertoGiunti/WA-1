@@ -83,7 +83,7 @@ export async function startMatch({ userId = null, guest = false }) {
     [guest ? 1 : 0]
   );
   const sentenceU = row.text.toUpperCase();
-  console.log(sentenceU);
+  
   const now = dayjs();
   const ends = now.add(MATCH_SECONDS, 'second');
   const mask = buildMask(sentenceU);

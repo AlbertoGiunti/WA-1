@@ -60,13 +60,13 @@ export default function Grid({ mask, spaces, revealed, sentence, finished }) {
   return (
     <Card className="mb-3">
       <Card.Header>
-        <h5 className="mb-0">🎯 Guess the Sentence</h5>
+        <h5 className="mb-0">🎮 Guess the Sentence</h5>
       </Card.Header>
       <Card.Body className="py-3">
         <div className="text-center letter-spacing">
           {renderSentence()}
         </div>
-        <div className="mt-2 text-center text-muted">
+        <div className="mt-2 text-center text-white">
           <small>
             💡 Click letters below or type the full sentence to guess
           </small>
