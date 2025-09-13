@@ -142,7 +142,7 @@ app.post(
   handleValidation,
   async (req, res, next) => {
     try {
-      const r = await guessLetter({ matchId: +req.params.id, userId: req.user.id, letter: req.body.letter });
+      const r = await guessLetter({ matchId: +req.params.id, userId: req.user.id, letter: req.body.letter, isGuestMode: false });
       const db = await getDb();
       const u = await db.get('SELECT coins FROM users WHERE id=?', [req.user.id]);
       req.user.coins = u.coins;
@@ -163,7 +163,7 @@ app.post(
   handleValidation,
   async (req, res, next) => {
     try {
-      const r = await guessSentence({ matchId: +req.params.id, userId: req.user.id, sentence: req.body.sentence });
+      const r = await guessSentence({ matchId: +req.params.id, userId: req.user.id, sentence: req.body.sentence, isGuestMode: false });
       const db = await getDb();
       const u = await db.get('SELECT coins FROM users WHERE id=?', [req.user.id]);
       req.user.coins = u.coins;
@@ -218,7 +218,7 @@ app.post(
   handleValidation,
   async (req, res, next) => {
     try {
-      const r = await guessLetter({ matchId: +req.params.id, userId: null, letter: req.body.letter });
+      const r = await guessLetter({ matchId: +req.params.id, userId: null, letter: req.body.letter, isGuestMode: true });
       res.json(r);
     } catch (e) {
       if (e.message && e.message.includes('Vowel'))
@@ -235,7 +235,7 @@ app.post(
   handleValidation,
   async (req, res, next) => {
     try {
-      const r = await guessSentence({ matchId: +req.params.id, userId: null, sentence: req.body.sentence });
+      const r = await guessSentence({ matchId: +req.params.id, userId: null, sentence: req.body.sentence, isGuestMode: true });
       res.json(r);
     } catch (e) { next(e); }
   }

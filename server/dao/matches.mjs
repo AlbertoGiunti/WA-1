@@ -237,9 +237,10 @@ export async function getMatchSafe(m) {
  * @param {number} params.matchId - Match ID
  * @param {number|null} params.userId - User ID (null for guest)
  * @param {string} params.letter - Letter being guessed
+ * @param {boolean} params.isGuestMode - Whether this is a guest mode game
  * @returns {Object} Result with updated match and message
  */
-export async function guessLetter({ matchId, userId = null, letter }) {
+export async function guessLetter({ matchId, userId = null, letter, isGuestMode = false }) {
   const db = await getDb();
   const m = await db.get('SELECT * FROM matches WHERE id=?', [matchId]);
   if (!m || m.status !== 'playing') throw new Error('Match not playable');
@@ -276,8 +277,12 @@ export async function guessLetter({ matchId, userId = null, letter }) {
 
   if (won) {
     status = 'won';
-    message = 'You guessed all letters!';
-    if (mm.user_id) newCoins = (newCoins ?? 0) + 100;
+    if (!isGuestMode && mm.user_id) {
+      message = 'You guessed all letters! You gained +100 coins!';
+      newCoins = (newCoins ?? 0) + 100;
+    } else {
+      message = 'You guessed all letters! Excellent! 🎉';
+    }
   }
 
   const newGuessed = (mm.guessed_letters + L)
@@ -301,9 +306,10 @@ export async function guessLetter({ matchId, userId = null, letter }) {
  * @param {number} params.matchId - Match ID
  * @param {number|null} params.userId - User ID (null for guest)
  * @param {string} params.sentence - Sentence being guessed
+ * @param {boolean} params.isGuestMode - Whether this is a guest mode game
  * @returns {Object} Result with updated match and message
  */
-export async function guessSentence({ matchId, userId = null, sentence }) {
+export async function guessSentence({ matchId, userId = null, sentence, isGuestMode = false }) {
   const db = await getDb();
   const m = await db.get('SELECT * FROM matches WHERE id=?', [matchId]);
   if (!m || m.status !== 'playing') throw new Error('Match not playable');
@@ -325,10 +331,14 @@ export async function guessSentence({ matchId, userId = null, sentence }) {
   if (ok) {
     newMask = [...S].map(_ => '1').join('');
     status = 'won';
-    message = 'Correct sentence! You gained +100 coins!';
-    if (mm.user_id) {
+    
+    // Different messages for guest vs authenticated users
+    if (!isGuestMode && mm.user_id) {
+      message = 'Correct sentence! You gained +100 coins!';
       const currentCoins = await getUserCoins(mm.user_id);
       newCoins = currentCoins + 100;
+    } else {
+      message = 'Correct sentence! Well done! 🎉';
     }
   }
 
