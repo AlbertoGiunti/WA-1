@@ -113,7 +113,6 @@ app.get('/api/me', isLoggedIn, async (req, res) => {
 /* ========= Matches (LOGGED) ========= */
 app.post('/api/matches', isLoggedIn, async (req, res, next) => {
   try {
-    if (req.user.coins <= 0) return res.status(400).json({ error: 'No coins to start a match' });
     const m = await startMatch({ userId: req.user.id, guest: false });
     const db = await getDb();
     const u = await db.get('SELECT coins FROM users WHERE id=?', [req.user.id]);

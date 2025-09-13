@@ -86,15 +86,19 @@ export default function HomePage() {
                         Welcome back, <strong>{user.username}</strong>!
                       </small>
                       <div className="fw-bold" style={{ color: 'var(--primary-color)' }}>💰 {user.coins ?? 0} coins available</div>
+                      {(user.coins ?? 0) === 0 && (
+                        <small className="d-block mt-1" style={{ color: 'var(--text-secondary)' }}>
+                          💡 No coins? You can still win by guessing the complete sentence!
+                        </small>
+                      )}
                     </div>
                     <Button
                       variant="primary"
                       size="lg"
                       className="w-100 fw-bold"
                       onClick={handleNormalModeClick}
-                      disabled={!user.coins || user.coins <= 0}
                     >
-                      {!user.coins || user.coins <= 0 ? 'Not enough coins' : 'Start Game'}
+                      Start Game
                     </Button>
                   </div>
                 ) : (

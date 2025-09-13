@@ -97,19 +97,17 @@ export default function PlayPage() {
                     💰 Current Balance: {user?.coins || 0} coins
                   </Badge>
                 </div>
-                {(user?.coins || 0) > 0 ? (
-                  <Button 
-                    variant="success" 
-                    size="lg" 
-                    onClick={onStart}
-                    className="px-5"
-                  >
-                    🚀 Start New Match
-                  </Button>
-                ) : (
-                  <Alert variant="warning" style={{ backgroundColor: 'var(--warning-bg)', borderColor: 'var(--warning-color)', color: 'var(--warning-color)' }}>
-                    <h5>No coins left! 😔</h5>
-                    <p className="mb-0">You need coins to play. Try the guest mode instead!</p>
+                <Button 
+                  variant="success" 
+                  size="lg" 
+                  onClick={onStart}
+                  className="px-5"
+                >
+                  🚀 Start New Match
+                </Button>
+                {(user?.coins || 0) === 0 && (
+                  <Alert variant="info" className="mt-3" style={{ backgroundColor: 'var(--info-bg)', borderColor: 'var(--info-color)', color: 'var(--info-color)' }}>
+                    <small>💡 <strong>Tip:</strong> You have no coins, but you can still win by guessing the complete sentence to earn 100 coins!</small>
                   </Alert>
                 )}
               </Card.Body>

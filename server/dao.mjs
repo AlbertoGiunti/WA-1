@@ -83,6 +83,7 @@ export async function startMatch({ userId = null, guest = false }) {
     [guest ? 1 : 0]
   );
   const sentenceU = row.text.toUpperCase();
+  console.log(sentenceU);
   const now = dayjs();
   const ends = now.add(MATCH_SECONDS, 'second');
   const mask = buildMask(sentenceU);
@@ -236,7 +237,7 @@ export async function guessSentence({ matchId, userId = null, sentence }) {
   if (ok) {
     newMask = [...S].map(_ => '1').join('');
     status = 'won';
-    message = 'Correct sentence! +100 coins if logged in.';
+    message = 'Correct sentence! You gained +100 coins!';
     if (mm.user_id) {
       const currentCoins = await getUserCoins(mm.user_id);
       newCoins = currentCoins + 100;
