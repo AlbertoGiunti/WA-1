@@ -17,6 +17,8 @@ export default function PlayPage() {
   const [msg, setMsg] = useState('');
   const [showAbandonModal, setShowAbandonModal] = useState(false);
 
+  const [isHandlingTimeout, setIsHandlingTimeout] = useState(false);
+
   const updateMatch = useCallback((newMatch) => {
     setMatch(newMatch);
     setCurrentMatch(newMatch);
@@ -54,6 +56,50 @@ export default function PlayPage() {
 
   const timeUp = secondsLeft === 0;
   const finished = match && (match.status !== 'playing' || timeUp);
+
+  // Handle automatic timeout
+  useEffect(() => {
+    if (match && match.status === 'playing' && timeUp && !isHandlingTimeout) {
+      // When time runs out, fetch updated match status from server
+      const handleTimeout = async () => {
+        setIsHandlingTimeout(true);
+        try {
+          console.log('🕐 Handling timeout for match:', match.id);
+          const updatedMatch = await api.currentMatch();
+          console.log('📥 Server response:', updatedMatch);
+          
+          if (updatedMatch && updatedMatch.status === 'lost') {
+            updateMatch(updatedMatch);
+            // Calculate penalty message
+            const penalty = Math.min(20, user?.coins || 0);
+            const coinsLost = penalty > 0 ? penalty : user?.coins || 0;
+            setMsg(`⏰ Time's up! Game Over! You lost ${coinsLost} coins as penalty.`);
+            await syncCoins(); // Update coins display
+          } else if (updatedMatch && (updatedMatch.status === 'won' || updatedMatch.status === 'lost')) {
+            // Match finished (won or lost), update to show final state
+            updateMatch(updatedMatch);
+            if (updatedMatch.status === 'won') {
+              setMsg('🎉 Congratulations! You won!');
+            }
+          } else if (!updatedMatch) {
+            // No current match from server - this should not happen during timeout
+            console.log('⚠️ No current match from server during timeout handling');
+            // Don't clear the match immediately, keep the current state for user to see result
+          } else {
+            // Match still exists but not finished yet, update anyway
+            updateMatch(updatedMatch);
+          }
+        } catch (err) {
+          console.error('❌ Error handling timeout:', err);
+          // Even on error, try to clear the match state
+          updateMatch(null);
+        } finally {
+          setIsHandlingTimeout(false);
+        }
+      };
+      handleTimeout();
+    }
+  }, [match?.id, match?.status, timeUp, isHandlingTimeout, syncCoins, updateMatch]);
 
   const playLetter = async (L) => {
     if (!match || finished) return;
@@ -181,9 +227,9 @@ export default function PlayPage() {
                       <GuessSentence disabled={finished} onGuess={playSentence} compact={true} />
                     </Col>
                     <Col md={2} className="text-end">
-                      {match.status === 'won' ? (
+                      {(match.status === 'won' || match.status === 'lost') ? (
                         <Button 
-                          variant="success" 
+                          variant={match.status === 'won' ? 'success' : 'danger'} 
                           size="sm"
                           onClick={goToHome}
                         >

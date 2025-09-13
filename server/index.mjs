@@ -126,13 +126,7 @@ app.get('/api/matches/current', isLoggedIn, async (req, res, next) => {
     const m = await currentMatch(req.user.id);
     if (!m) return res.json(null);
     
-    // Check if match is expired without applying penalty
-    const now = dayjs().unix();
-    if (m.status === 'playing' && now > m.ends_at) {
-      // Match is expired, return null instead of applying penalty
-      return res.json(null);
-    }
-    
+    // getMatchSafe will handle timeout and apply penalty if needed
     res.json(await getMatchSafe(m));
   } catch (e) { next(e); }
 });

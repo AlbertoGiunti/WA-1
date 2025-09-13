@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Badge, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
@@ -14,11 +14,12 @@ export default function GuestPage() {
   const [match, setMatch] = useState(null);
   const [msg, setMsg] = useState('');
   const [showAbandonModal, setShowAbandonModal] = useState(false);
+  const [isHandlingTimeout, setIsHandlingTimeout] = useState(false);
 
-  const updateMatch = (newMatch) => {
+  const updateMatch = useCallback((newMatch) => {
     setMatch(newMatch);
     setCurrentMatch(newMatch);
-  };
+  }, [setCurrentMatch]);
 
   const start = async () => {
     try {
@@ -41,22 +42,38 @@ export default function GuestPage() {
 
   // Handle automatic timeout
   useEffect(() => {
-    if (match && match.status === 'playing' && timeUp) {
+    if (match && match.status === 'playing' && timeUp && !isHandlingTimeout) {
       // When time runs out, fetch updated match status from server
       const handleTimeout = async () => {
+        setIsHandlingTimeout(true);
         try {
+          console.log('🕐 Guest timeout for match:', match.id);
           const updatedMatch = await api.guestCurrent(match.id);
-          updateMatch(updatedMatch);
-          if (updatedMatch.status === 'lost') {
-            setMsg('⏰ Time\'s up! Game Over!');
+          console.log('📥 Guest server response:', updatedMatch);
+          
+          if (updatedMatch && updatedMatch.status === 'lost') {
+            updateMatch(updatedMatch);
+            setMsg('⏰ Time\'s up! Game Over! In guest mode, no coins are lost.');
+          } else if (!updatedMatch) {
+            // No current match, clear state
+            console.log('📭 No current guest match from server');
+            updateMatch(null);
+            setMsg('');
+          } else {
+            // Match still exists but not lost yet, update anyway
+            updateMatch(updatedMatch);
           }
         } catch (err) {
-          console.error('Error handling timeout:', err);
+          console.error('❌ Error handling guest timeout:', err);
+          // Even on error, try to clear the match state
+          updateMatch(null);
+        } finally {
+          setIsHandlingTimeout(false);
         }
       };
       handleTimeout();
     }
-  }, [match, timeUp]);
+  }, [match?.id, match?.status, timeUp, isHandlingTimeout, updateMatch]);
 
   const pick = async (L) => {
     if (!match || finished) return;
@@ -171,9 +188,9 @@ export default function GuestPage() {
                       <GuessSentence disabled={finished} onGuess={guess} compact={true} />
                     </Col>
                     <Col md={2} className="text-end">
-                      {match.status === 'won' ? (
+                      {(match.status === 'won' || match.status === 'lost') ? (
                         <Button 
-                          variant="success" 
+                          variant={match.status === 'won' ? 'success' : 'danger'} 
                           size="sm"
                           onClick={goToHome}
                         >
