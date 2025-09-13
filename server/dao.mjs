@@ -129,11 +129,11 @@ export async function getMatchSafe(m) {
 
   const revealed = [...sentenceU].map((ch, i) => {
     if (ch === ' ') return null;                             // spaces always null
-    return m.revealed_mask[i] === '1' ? ch : null;          // revealed letter vs not revealed
+    return m.revealed_mask[i] === '1' ? ch : null;           // revealed letter vs not revealed
   });
 
    // At the end of the game you can show the complete sentence
-  const fullSentence = (m.status !== 'playing') ? sentenceU : null;
+  const fullSentence = (m.status !== 'playing' && m.status !== 'abandoned') ? sentenceU : null;
 
   const result = {
     id: m.id,
