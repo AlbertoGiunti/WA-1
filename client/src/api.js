@@ -21,7 +21,16 @@ export const login = (username, password) =>
   http('/sessions', { method:'POST', body: JSON.stringify({ username, password }) });
 export const register = (username, password) =>
   http('/users', { method:'POST', body: JSON.stringify({ username, password }) });
-export const me = (opt) => http('/sessions/current', { method:'GET', ...(opt||{}) });
+export const me = async (opt) => {
+  try {
+    return await http('/sessions/current', { method: 'GET', ...(opt || {}) });
+  } catch (err) {
+    if (err.status === 401) {
+      return null;
+    }
+    throw err;
+  }
+};
 export const logout = () => http('/sessions/current', { method:'DELETE' });
 
 /* users quick */

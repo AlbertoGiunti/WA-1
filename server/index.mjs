@@ -61,7 +61,7 @@ app.post('/api/sessions', passport.authenticate('local'), async (req, res) => {
 });
 
 app.get('/api/sessions/current', (req, res) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: 'Not authenticated' });
+  if (!req.isAuthenticated()) return res.json(null);  //res.status(401).json({ error: 'Not authenticated' });
   res.json(req.user);
 });
 

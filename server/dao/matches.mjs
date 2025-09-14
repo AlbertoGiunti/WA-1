@@ -273,7 +273,19 @@ export async function guessLetter({ matchId, userId = null, letter, isGuestMode 
 
   const won = isAllRevealed(newMask, S);
   let status = mm.status;
-  let message = present ? 'Letter revealed.' : 'Letter not present (cost doubled).';
+  //let message = present ? 'Letter revealed.' : 'Letter not present (cost doubled).';
+
+  let message;
+  if (present) {
+    message = 'Letter revealed.';
+  } else {
+    // Different messages for guest vs authenticated users when letter is wrong
+    if (isGuestMode) {
+      message = 'Wrong letter! As a guest, you can try for free. If you had an account, this mistake would double your costs!';
+    } else {
+      message = `Wrong letter! Cost doubled to ${effectiveCost} coins.`;
+    }
+  }
 
   if (won) {
     status = 'won';

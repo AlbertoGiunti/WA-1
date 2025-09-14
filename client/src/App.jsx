@@ -28,28 +28,36 @@ function NavigationBar({ user, onLogout, onHomeClick }) {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       <div className="container-fluid">
-        <a className="navbar-brand fw-bold" href="/" onClick={handleHomeClick} style={{ fontSize: '1.5rem' }}>
+        <span className="navbar-brand fw-bold" style={{ fontSize: '1.5rem' }}>
           🎮 Guess the Sentence
-        </a>
+        </span>
         <div className="navbar-nav ms-auto">
-          {user ? (
-            <div className="d-flex align-items-center gap-3">
-              <span className="text-light">
-                Welcome, <strong>{user.username}</strong> | 💰 {user.coins || 0} coins
-              </span>
-              <button 
-                className="btn btn-outline-light btn-sm"
-                onClick={onLogout}
-              >
-                Logout
-              </button>
-            </div>
-          ) : (
-            <div className="d-flex gap-2">
-              <a href="/login" className="btn btn-outline-light btn-sm">Login</a>
-              <a href="/register" className="btn btn-light btn-sm">Register</a>
-            </div>
-          )}
+          <div className="d-flex align-items-center gap-3">
+            <button 
+              className="btn btn-outline-light btn-sm d-flex align-items-center gap-1"
+              onClick={handleHomeClick}
+            >
+              🏠 Home
+            </button>
+            {user ? (
+              <>
+                <span className="text-light">
+                  Welcome, <strong>{user.username}</strong> | 💰 {user.coins || 0} coins
+                </span>
+                <button 
+                  className="btn btn-outline-light btn-sm"
+                  onClick={onLogout}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <a href="/login" className="btn btn-outline-light btn-sm">Login</a>
+                <a href="/register" className="btn btn-light btn-sm">Register</a>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </nav>
