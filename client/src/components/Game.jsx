@@ -8,6 +8,7 @@ import GameHeader from './GameHeader.jsx';
 import ReadyToPlay from './ReadyToPlay.jsx';
 import GameInterface from './GameInterface.jsx';
 import AbandonMatchModal from './AbandonMatchModal.jsx';
+import Butterfly from './Butterfly.jsx';
 
 /**
  * Game component - Main game orchestrator
@@ -130,7 +131,7 @@ export default function Game({ isGuest = false }) {
         await syncCoins();
       }
     } catch (err) {
-      setMessage(`Error: ${err.message}`);
+      setMessage(`${err.message}`);
     }
   };
 
@@ -187,48 +188,76 @@ export default function Game({ isGuest = false }) {
 
   return (
     <Container className="fade-in-up">
-      <Row className="justify-content-center">
-        <Col lg={11}>
-          {/* Game Header - Player info, stats */}
-          <GameHeader 
-            isGuest={isGuest}
-            user={user}
-            match={match}
-          />
+      {!match ? (
+        // ReadyToPlay layout with Butterfly between header and ready card
+        <Row className="justify-content-center">
+          <Col lg={11}>
+            {/* Game Header - Player info, stats */}
+            <GameHeader 
+              isGuest={isGuest}
+              user={user}
+              match={match}
+            />
 
-          {/* Ready to Play Screen */}
-          {!match && (
+            {/* Butterfly positioned between header and ready card */}
+            <Row className="mb-3">
+              <Col>
+                <Butterfly />
+              </Col>
+            </Row>
+
+            {/* Ready to Play Screen */}
             <ReadyToPlay 
               isGuest={isGuest}
               onStart={startGame}
               message={message}
             />
-          )}
+          </Col>
+        </Row>
+      ) : (
+        
+        <>
+          <Row className="justify-content-center">
+            <Col lg={11}>
+              {/* Game Header - Player info, stats */}
+              <GameHeader 
+                isGuest={isGuest}
+                user={user}
+                match={match}
+              />
 
-          {/* Game Interface */}
-          {match && (
-            <GameInterface 
-              match={match}
-              finished={finished}
-              isGuest={isGuest}
-              message={message}
-              onGuessLetter={guessLetter}
-              onGuessSentence={guessSentence}
-              onAbandon={handleAbandonClick}
-              onGoHome={goToHome}
-              onTimeUp={handleTimeout}
-            />
-          )}
+              {/* Game Interface */}
+              <GameInterface 
+                match={match}
+                user={user}
+                finished={finished}
+                isGuest={isGuest}
+                message={message}
+                onGuessLetter={guessLetter}
+                onGuessSentence={guessSentence}
+                onAbandon={handleAbandonClick}
+                onGoHome={goToHome}
+                onTimeUp={handleTimeout}
+              />
+            </Col>
+          </Row>
+          
+          {/* Butterfly at bottom for game interface */}
+          <Row className="mt-4">
+            <Col>
+              <Butterfly />
+            </Col>
+          </Row>
+        </>
+      )}
 
-          {/* Abandon Confirmation Modal */}
-          <AbandonMatchModal
-            show={showAbandonModal}
-            onConfirm={confirmAbandon}
-            onCancel={cancelAbandon}
-            isGuest={isGuest}
-          />
-        </Col>
-      </Row>
+      {/* Abandon Confirmation Modal */}
+      <AbandonMatchModal
+        show={showAbandonModal}
+        onConfirm={confirmAbandon}
+        onCancel={cancelAbandon}
+        isGuest={isGuest}
+      />
     </Container>
   );
 }

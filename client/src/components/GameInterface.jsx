@@ -9,6 +9,7 @@ import Timer from './Timer.jsx';
 /**
  * GameInterface component - Displays the main game interface
  * @param {Object} match - Current match object
+ * @param {Object} user - Current user object (contains coins info)
  * @param {boolean} finished - Whether the game is finished
  * @param {boolean} isGuest - Whether this is guest mode
  * @param {string} message - Game message to display
@@ -20,6 +21,7 @@ import Timer from './Timer.jsx';
  */
 export default function GameInterface({ 
   match, 
+  user,
   finished, 
   isGuest, 
   message, 
@@ -138,6 +140,7 @@ export default function GameInterface({
             usedVowel={match.usedVowel}
             disabled={finished}
             showCosts={!isGuest} // Only show costs for authenticated users
+            userCoins={isGuest ? null : user?.coins} // Pass user coins for validation
           />
         </Col>
       </Row>

@@ -4,7 +4,7 @@ import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
 import morgan from 'morgan';
-import dayjs from 'dayjs';
+//import dayjs from 'dayjs';
 import { body, param, validationResult } from 'express-validator';
 
 import { setupPassport } from './auth/auth.mjs';
@@ -61,7 +61,7 @@ app.post('/api/sessions', passport.authenticate('local'), async (req, res) => {
 });
 
 app.get('/api/sessions/current', (req, res) => {
-  if (!req.isAuthenticated()) return res.json(null);  //res.status(401).json({ error: 'Not authenticated' });
+  if (!req.isAuthenticated()) return   res.status(401).json({ error: 'Not authenticated' });  // res.json(null);
   res.json(req.user);
 });
 
@@ -153,7 +153,7 @@ app.post(
       req.user.coins = u.coins;
       res.json(r);
     } catch (e) {
-      if (e.message && (e.message.includes('Vowel') || e.message.includes('No coins')))
+      if (e.message && (e.message.includes('Vowel') || e.message.includes('You don\'t have enough coins for this action')))
         return res.status(400).json({ error: e.message });
       next(e);
     }

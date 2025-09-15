@@ -1,24 +1,25 @@
-import { Card, Badge, Row, Col } from 'react-bootstrap';
+import { Card, Row, Col } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 import { getLetterCosts } from '../api.js';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const VOWELS = new Set(['A', 'E', 'I', 'O', 'U']);
 
-// Function to get color based on cost - Same scheme as Butterfly component
+// Function to get color based on cost - Uses CSS variables for consistency
 function getCostColor(cost) {
+  const root = document.documentElement;
   switch (cost) {
-    case 10: return '#0d6efd';    // Blue for vowels
-    case 5:  return '#00d221';    // Green for tier 5
-    case 4:  return '#8fbc8f';    // Light green for tier 4
-    case 3:  return '#ffd700';    // Yellow for tier 3
-    case 2:  return '#ff8c00';    // Orange for tier 2
-    case 1:  return '#dc3545';    // Red for tier 1
-    default: return '#6c757d';    // Default gray
+    case 10: return getComputedStyle(root).getPropertyValue('--letter-cost-vowel').trim();
+    case 5:  return getComputedStyle(root).getPropertyValue('--letter-cost-common').trim();
+    case 4:  return getComputedStyle(root).getPropertyValue('--letter-cost-medium').trim();
+    case 3:  return getComputedStyle(root).getPropertyValue('--letter-cost-less').trim();
+    case 2:  return getComputedStyle(root).getPropertyValue('--letter-cost-rare').trim();
+    case 1:  return getComputedStyle(root).getPropertyValue('--letter-cost-very-rare').trim();
+    default: return getComputedStyle(root).getPropertyValue('--letter-cost-default').trim();
   }
 }
 
-export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCosts = true }) {
+export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCosts = true, userCoins = null }) {
   const [letterCosts, setLetterCosts] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -60,7 +61,8 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
     const isGuessed = guessed.has(letter);
     const isVowel = VOWELS.has(letter);
     const cost = letterCosts[letter] || (isVowel ? 10 : 2);
-    const canPick = !disabled && !isGuessed && (!isVowel || !usedVowel);
+    const hasInsufficientCoins = userCoins !== null && userCoins < cost;
+    const canPick = !disabled && !isGuessed && (!isVowel || !usedVowel) && !hasInsufficientCoins;
     
     // Calculate color based on cost
     const backgroundColor = getCostColor(cost);
@@ -76,7 +78,7 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
             border: `2px solid ${isDisabled ? '#dee2e6' : backgroundColor}`,
             color: isDisabled ? '#6c757d' : 'white',
             cursor: canPick ? 'pointer' : 'not-allowed',
-            opacity: isGuessed ? 0.6 : 1,
+            opacity: isGuessed ? 0.6 : hasInsufficientCoins ? 0.4 : 1,
             fontSize: '0.9rem',
             fontWeight: 'bold',
             borderRadius: '8px',
@@ -101,13 +103,19 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
               e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
             }
           }}
+          title={hasInsufficientCoins ? `Need ${cost} coins (you have ${userCoins})` : undefined}
         >
           <div>{letter}</div>
           {showCosts && (
             <small style={{ fontSize: '0.7rem' }}>
               {cost}💰
             </small>
-          )}
+          )} {/*
+          {hasInsufficientCoins && (
+            <small style={{ fontSize: '0.6rem', color: '#dc3545' }}>
+              ❌
+            </small>
+          )} */}
         </div>
       </Col>
     );
@@ -132,15 +140,20 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
             <div className="mt-3 text-center">
               <small className="text-white">
                 💰 Letter costs: 
-                <span style={{ color: '#0d6efd' }}> Vowels(10)</span> |
-                <span style={{ color: '#00d221' }}> Common(5)</span> |
-                <span style={{ color: '#8fbc8f' }}> Medium(4)</span> |
-                <span style={{ color: '#ffd700' }}> Less(3)</span> |
-                <span style={{ color: '#ff8c00' }}> Rare(2)</span> |
-                <span style={{ color: '#dc3545' }}> Very Rare(1)</span>
+                <span style={{ color: 'var(--letter-cost-vowel)' }}> Vowels(10)</span> |
+                <span style={{ color: 'var(--letter-cost-common)' }}> Common(5)</span> |
+                <span style={{ color: 'var(--letter-cost-medium)' }}> Medium(4)</span> |
+                <span style={{ color: 'var(--letter-cost-less)' }}> Less(3)</span> |
+                <span style={{ color: 'var(--letter-cost-rare)' }}> Rare(2)</span> |
+                <span style={{ color: 'var(--letter-cost-very-rare)' }}> Very Rare(1)</span>
                 {usedVowel && (
                   <span className="text-warning d-block mt-1">
                     ⚠️ Vowel already used in this match
+                  </span>
+                )}
+                {userCoins !== null && (
+                  <span className="text-info d-block mt-1">
+                    💰 You have {userCoins} coins
                   </span>
                 )}
               </small>

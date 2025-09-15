@@ -259,13 +259,25 @@ export async function guessLetter({ matchId, userId = null, letter, isGuestMode 
   const cost = letterCost(L);
   const present = S.includes(L);
   const effectiveCost = (present ? cost : cost * 2);
-
+  let penalty;
+  
   // Coin management - get current user coins
   let newCoins = null;
   if (mm.user_id) {
     const currentCoins = await getUserCoins(mm.user_id);
-    if (currentCoins <= 0) throw new Error('No coins');
-    newCoins = Math.max(0, currentCoins - effectiveCost);
+    if (currentCoins <= 0) throw new Error("You don\'t have enough coins for this action");
+    
+    // Check if user has enough coins for the minimum cost (before knowing if letter is present)
+    if (currentCoins < cost) {
+      throw new Error(`Insufficient coins! You need at least ${cost} coins to guess this letter, but you only have ${currentCoins}.`);
+    }
+
+    if (currentCoins < effectiveCost){
+      penalty = currentCoins;
+    }else {
+      penalty = effectiveCost;
+    }
+    newCoins = Math.max(0, currentCoins - penalty);
   }
 
   let newMask = mm.revealed_mask;
@@ -281,9 +293,9 @@ export async function guessLetter({ matchId, userId = null, letter, isGuestMode 
   } else {
     // Different messages for guest vs authenticated users when letter is wrong
     if (isGuestMode) {
-      message = 'Wrong letter! As a guest, you can try for free. If you had an account, this mistake would double your costs!';
+      message = 'Wrong letter! As a guest, you can try for free. If you weren\’t in guest mode, this mistake would cost you double!';
     } else {
-      message = `Wrong letter! Cost doubled to ${effectiveCost} coins.`;
+      message = `Wrong letter! Cost doubled to ${penalty} coins.`;
     }
   }
 

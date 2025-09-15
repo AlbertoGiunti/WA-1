@@ -1,31 +1,19 @@
 // client/src/components/Butterfly.jsx
 import { useState, useEffect } from 'react';
-import { Card, Badge, Button } from 'react-bootstrap';
+import { Card, Button } from 'react-bootstrap';
 import { api } from '../api';
 
-// Cost tier mapping with server-side schema - Custom color scheme
-function getCostBadgeColor(cost) {
-  switch (cost) {
-    case 10: return 'primary';    // Vowels (A,E,I,O,U) - Blue
-    case 5:  return 'success';    // Tier 5 (T,N,S,H,R) - Green
-    case 4:  return 'warning';    // Tier 4 (D,L,C) - Light green/Yellow
-    case 3:  return 'warning';    // Tier 3 (U,M,W,F) - Yellow
-    case 2:  return 'warning';    // Tier 2 (G,Y,P,B,V,K) - Orange
-    case 1:  return 'danger';     // Tier 1 (J,X,Q,Z) - Red
-    default: return 'secondary'; // Default gray
-  }
-}
-
-// Function to get custom CSS colors for letter cost visualization
+// Function to get custom CSS colors for letter cost visualization - Uses CSS variables
 function getCostColor(cost) {
+  const root = document.documentElement;
   switch (cost) {
-    case 10: return '#0d6efd';    // Blue for vowels
-    case 5:  return '#00d221';    // Green for tier 5
-    case 4:  return '#8fbc8f';    // Light green for tier 4
-    case 3:  return '#ffd700';    // Yellow for tier 3
-    case 2:  return '#ff8c00';    // Orange for tier 2
-    case 1:  return '#dc3545';    // Red for tier 1
-    default: return '#6c757d';    // Default gray
+    case 10: return getComputedStyle(root).getPropertyValue('--letter-cost-vowel').trim();
+    case 5:  return getComputedStyle(root).getPropertyValue('--letter-cost-common').trim();
+    case 4:  return getComputedStyle(root).getPropertyValue('--letter-cost-medium').trim();
+    case 3:  return getComputedStyle(root).getPropertyValue('--letter-cost-less').trim();
+    case 2:  return getComputedStyle(root).getPropertyValue('--letter-cost-rare').trim();
+    case 1:  return getComputedStyle(root).getPropertyValue('--letter-cost-very-rare').trim();
+    default: return getComputedStyle(root).getPropertyValue('--letter-cost-default').trim();
   }
 }
 
@@ -97,7 +85,7 @@ export default function Butterfly() {
             </div>
 
             <div className="text-center mt-3">
-              <Button size="sm" variant="outline-secondary" onClick={load}>
+              <Button size="sm" variant="outline-primary" onClick={load}>
                 Refresh
               </Button>
             </div>
@@ -105,11 +93,11 @@ export default function Butterfly() {
         )}
 
         <hr className="my-3" />
-        <div className="small text-muted" style={{ fontSize: '0.8rem' }}>
+        <div className="small text-muted text-center" style={{ fontSize: '0.8rem' }}>
           <strong>Cost Tiers:</strong>
           <div className="mt-1">
             <span style={{ 
-              backgroundColor: '#0d6efd', 
+              backgroundColor: 'var(--letter-cost-vowel)', 
               color: 'white', 
               padding: '4px 8px', 
               borderRadius: '4px', 
@@ -118,7 +106,7 @@ export default function Butterfly() {
               fontWeight: 'bold'
             }}>10💰 Vowels</span>
             <span style={{ 
-              backgroundColor: '#00d221', 
+              backgroundColor: 'var(--letter-cost-common)', 
               color: 'white', 
               padding: '4px 8px', 
               borderRadius: '4px', 
@@ -127,7 +115,7 @@ export default function Butterfly() {
               fontWeight: 'bold'
             }}>5💰 Common</span>
             <span style={{ 
-              backgroundColor: '#8fbc8f', 
+              backgroundColor: 'var(--letter-cost-medium)', 
               color: 'white', 
               padding: '4px 8px', 
               borderRadius: '4px', 
@@ -138,7 +126,7 @@ export default function Butterfly() {
           </div>
           <div className="mt-2">
             <span style={{ 
-              backgroundColor: '#ffd700', 
+              backgroundColor: 'var(--letter-cost-less)', 
               color: 'white', 
               padding: '4px 8px', 
               borderRadius: '4px', 
@@ -147,7 +135,7 @@ export default function Butterfly() {
               fontWeight: 'bold'
             }}>3💰 Less</span>
             <span style={{ 
-              backgroundColor: '#ff8c00', 
+              backgroundColor: 'var(--letter-cost-rare)', 
               color: 'white', 
               padding: '4px 8px', 
               borderRadius: '4px', 
@@ -156,7 +144,7 @@ export default function Butterfly() {
               fontWeight: 'bold'
             }}>2💰 Rare</span>
             <span style={{ 
-              backgroundColor: '#dc3545', 
+              backgroundColor: 'var(--letter-cost-very-rare)', 
               color: 'white', 
               padding: '4px 8px', 
               borderRadius: '4px', 

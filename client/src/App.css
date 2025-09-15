@@ -82,7 +82,20 @@
   --warning-color: #ffd43b;
   --danger-color: #ff6b6b;
   --text-primary: #343a40;
-  --text-secondary: #6c757d;
+  --text-secondary: #bdbebd;
+  /* Cards */
+  --card-bg: #2c2c2c;
+  --card-border: #667eea;
+  --card-text: #ffffff;
+  
+  /* Letter Cost Colors */
+  --letter-cost-vowel: #0d6efd;    /* Blue for vowels (tier 10) */
+  --letter-cost-common: #00d221;   /* Green for common letters (tier 5) */
+  --letter-cost-medium: #9acd32;   /* Yellowgreen for medium letters (tier 4) */
+  --letter-cost-less: #ffd700;     /* Yellow for less common letters (tier 3) */
+  --letter-cost-rare: #ff8c00;     /* Orange for rare letters (tier 2) */
+  --letter-cost-very-rare: #dc3545; /* Red for very rare letters (tier 1) */
+  --letter-cost-default: #6c757d;  /* Default gray */
   
   /* Background colors */
   --success-bg: rgba(81, 207, 102, 0.1);
@@ -265,10 +278,12 @@
 
 /* Card Enhancements */
 .card {
-  border: none;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(232, 152, 5, 0.1);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--card-bg);
+  color: var(--card-text);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(16,24,40,0.04);
   backdrop-filter: blur(10px);
 }
 

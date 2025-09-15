@@ -21,7 +21,7 @@ export default function HomePage() {
           <h1 className="display-5 fw-bold mb-3" style={{ color: 'var(--primary-color)' }}>
             🎮 Guess the Sentence
           </h1>
-          <p className="lead" style={{ color: 'var(--text-secondary)' }}>
+          <p className="lead" style={{ color: 'var(--text-primary)' }}>
             Challenge yourself to guess hidden sentences! Choose your preferred game mode below.
           </p>
         </div>
@@ -37,8 +37,11 @@ export default function HomePage() {
                   <h3 className="fw-bold" style={{ color: 'var(--secondary-color)' }}>Guest Mode</h3>
                 </div>
                 <div className="mb-4 flex-grow-1">
+                  <p className="mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    Try the game in <strong>Guest Mode</strong>! 
+                  </p>
                   <p className="mb-3" style={{ color: 'var(--text-secondary)' }}>
-                    Play without registration! Perfect for a quick game session.
+                    Available even if you are logged in — perfect as a tutorial or practice mode.
                   </p>
                   <ul className="list-unstyled text-start mx-auto" style={{ maxWidth: 360 }}>
                     <li className="mb-2">🎯 <strong>Simple sentences</strong></li>
@@ -126,21 +129,21 @@ export default function HomePage() {
           <Row className="text-center g-4">
             <Col md={4}>
               <h5 className="fw-bold" style={{ color: 'var(--secondary-color)' }}>🎲 Random Sentences</h5>
-              <p className="small" style={{ color: 'var(--text-secondary)' }}>Each game features a different sentence to keep you challenged.</p>
+              <p className="small" style={{ color: 'var(--text-primary)' }}>Each game features a different sentence to keep you challenged.</p>
             </Col>
             <Col md={4}>
               <h5 className="fw-bold" style={{ color: 'var(--secondary-color)' }}>⚡ Fast-Paced</h5>
-              <p className="small" style={{ color: 'var(--text-secondary)' }}>60-second timer adds excitement to every round.</p>
+              <p className="small" style={{ color: 'var(--text-primary)' }}>60-second timer adds excitement to every round.</p>
             </Col>
             <Col md={4}>
               <h5 className="fw-bold" style={{ color: 'var(--secondary-color)' }}>🧠 Strategic</h5>
-              <p className="small" style={{ color: 'var(--text-secondary)' }}>Choose letters wisely based on cost and frequency.</p>
+              <p className="small" style={{ color: 'var(--text-primary)' }}>Choose letters wisely based on cost and frequency.</p>
             </Col>
           </Row>
 
           {!user && (
             <div className="mt-4">
-              <p style={{ color: 'var(--text-secondary)' }} className="mb-2">
+              <p style={{ color: 'var(--text-primary)' }} className="mb-2">
                 New to the game?{' '}
                 <Button variant="link" className="p-0 align-baseline" style={{ color: 'var(--accent-color)' }} onClick={() => navigate('/register')}>
                   Create an account

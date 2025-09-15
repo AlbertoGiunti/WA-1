@@ -184,17 +184,11 @@ function App() {
                 element={<GuestPage />} 
               />
             </Routes>
-            {/* Butterfly at bottom for game pages */}
-            <Row className="mt-4">
-              <Col>
-                <Butterfly />
-              </Col>
-            </Row>
           </>
         ) : (
           // Sidebar layout for other pages
           <Row className="h-100">
-            <Col lg={9} md={8} sm={12} className="h-100">
+            <Col lg={location.pathname === '/' ? 9 : 12} md={location.pathname === '/' ? 8 : 12} sm={12} className="h-100">
               <Routes>
                 <Route 
                   path="/" 
@@ -214,9 +208,12 @@ function App() {
                 />
               </Routes>
             </Col>
-            <Col lg={3} md={4} className="d-none d-md-block h-100">
-              <Butterfly />
-            </Col>
+            {/* Show Butterfly only on HOME page */}
+            {location.pathname === '/' && (
+              <Col lg={3} md={4} className="d-none d-md-block h-100">
+                <Butterfly />
+              </Col>
+            )}
           </Row>
         )}
 

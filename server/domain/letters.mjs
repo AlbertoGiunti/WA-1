@@ -12,10 +12,10 @@ export const letterFrequency = {
 
 // Cost: vowels 10; consonants in tiers (5..1)
 const vowels = new Set(['A','E','I','O','U']);
-const tier5 = new Set(['T','N','S','H','R']);    // most frequent -> most expensive among consonants
-const tier4 = new Set(['D','L','C']);            // indicative choice consistent with requirements
-const tier3 = new Set(['U','M','W','F']);
-const tier2 = new Set(['G','Y','P','B','V','K']);
+const tier5 = new Set(['T','N','S','H','R']);                 // most frequent -> most expensive among consonants
+const tier4 = new Set(['D','L']);                             // indicative choice consistent with requirements
+const tier3 = new Set(['C', 'U','M','W','F','G','Y','P']);
+const tier2 = new Set(['B','V','K']);
 const tier1 = new Set(['J','X','Q','Z']);
 
 /**
