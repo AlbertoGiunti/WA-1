@@ -12,10 +12,10 @@ import { findByUsername, getById, verifyPassword } from '../dao/users.mjs';
  * @returns {Object} Configured passport instance
  */
 export function setupPassport() {
-  passport.use(new LocalStrategy(async (username, password, done) => {
+  passport.use(new LocalStrategy(async (username, password, done) => {  // done = CallBack
     try {
       const user = await findByUsername(username);
-      if (!user) return done(null, false, { message: 'Invalid credentials' });
+      if (!user) return done(null, false, { message: 'Invalid credentials' });  // null => no errors
       
       if (!verifyPassword(password, user.salt, user.password_hash))
         return done(null, false, { message: 'Invalid credentials' });
@@ -34,7 +34,7 @@ export function setupPassport() {
       if (!u) return done(null, false);
       done(null, { id: u.id, username: u.username, coins: u.coins });
     } catch (e) { 
-      done(e); 
+      done(e);   // !null => error
     }
   });
 

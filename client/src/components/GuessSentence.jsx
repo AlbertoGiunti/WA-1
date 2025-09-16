@@ -2,16 +2,20 @@ import { useState } from 'react';
 import { Card, Form, Button, InputGroup } from 'react-bootstrap';
 
 /**
- * Component for guessing the complete sentence
- * Users can win instantly by typing the exact sentence
- * @param {boolean} disabled - Whether input is disabled (game over/timeout)
- * @param {function} onGuess - Callback when sentence is submitted
- * @param {boolean} compact - Whether to show compact version for status bar
+ * Component for guessing the complete sentence in the word game
+ * Allows users to attempt to solve the puzzle by typing the full sentence
+ * Provides both compact and full layouts for different UI contexts
+ * @param {boolean} disabled - Whether the input is disabled (game over/timeout)
+ * @param {Function} onGuess - Callback function when sentence is submitted
+ * @param {boolean} compact - Whether to render in compact mode for status bars
  */
 export default function GuessSentence({ disabled, onGuess, compact = false }) {
   const [txt, setTxt] = useState('');
   
-  // Handle form submission - convert to uppercase and clear input
+  /**
+   * Handles form submission by processing the guess and clearing input
+   * @param {Event} e - Form submission event
+   */
   const submit = (e) => {
     e.preventDefault();
     if (!txt.trim()) return;
@@ -19,7 +23,7 @@ export default function GuessSentence({ disabled, onGuess, compact = false }) {
     setTxt('');
   };
 
-  // Compact version for embedding in status bars
+  // Render compact version for embedding in status bars or tight spaces
   if (compact) {
     return (
       <Form onSubmit={submit}>
@@ -44,6 +48,7 @@ export default function GuessSentence({ disabled, onGuess, compact = false }) {
     );
   }
 
+  // Render full card layout for main game interface
   return (
     <Card className="mb-3">
       <Card.Header>
@@ -70,6 +75,8 @@ export default function GuessSentence({ disabled, onGuess, compact = false }) {
             </Button>
           </InputGroup>
         </Form>
+        
+        {/* Instructional text for user guidance */}
         <div className="text-center text-muted">
           <small>
             ✨ If you guess the complete sentence correctly, you win instantly!

@@ -1,9 +1,13 @@
-// client/src/components/Butterfly.jsx
 import { useState, useEffect } from 'react';
 import { Card, Button } from 'react-bootstrap';
 import { api } from '../api';
 
-// Function to get custom CSS colors for letter cost visualization - Uses CSS variables
+/**
+ * Gets the appropriate color for a letter based on its cost
+ * Uses CSS variables for consistent theming across the application
+ * @param {number} cost - The cost of the letter
+ * @returns {string} The hex color code for the letter background
+ */
 function getCostColor(cost) {
   const root = document.documentElement;
   switch (cost) {
@@ -17,16 +21,24 @@ function getCostColor(cost) {
   }
 }
 
+/**
+ * Butterfly component that displays random letters with their frequencies and costs
+ * Provides educational information about letter distribution and game mechanics
+ */
 export default function Butterfly() {
   const [letters, setLetters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
 
+  /**
+   * Loads random letters with frequency and cost data from the API
+   */
   const load = async () => {
-    setLoading(true); setErr('');
+    setLoading(true); 
+    setErr('');
     try {
-      const data = await api.getButterfly(); // [{letter,frequency,cost}]
-      // Normalize letter to UPPERCASE for consistency with the rest of the app
+      const data = await api.getButterfly(); // Array of {letter, frequency, cost}
+      // Normalize letters to uppercase for consistency
       setLetters(data.map(x => ({ ...x, letter: String(x.letter).toUpperCase() })));
     } catch (e) {
       setErr(e.message || 'Error fetching random letters');
@@ -35,10 +47,14 @@ export default function Butterfly() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  // Load letters when component mounts
+  useEffect(() => { 
+    load(); 
+  }, []);
 
   return (
     <Card className="h-100 shadow-sm border-0" style={{ background: 'rgba(255, 255, 255, 0.95)' }}>
+      {/* Card header with gradient background */}
       <Card.Header className="text-center" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
         <div className="d-flex align-items-center justify-content-between">
           <h5 className="mb-0 w-100 text-center">🦋 Letter Costs & Frequencies</h5>
@@ -46,14 +62,18 @@ export default function Butterfly() {
       </Card.Header>
 
       <Card.Body className="p-3">
+        {/* Error display */}
         {err && <div className="text-danger text-center mb-2 small">{err}</div>}
+        
         {loading ? (
           <div className="text-center">Loading letters...</div>
         ) : (
           <>
+            {/* Letter display grid */}
             <div className="d-flex flex-wrap gap-2 justify-content-center">
               {letters.map((it, idx) => (
                 <div key={idx} className="text-center" style={{ minWidth: 54 }}>
+                  {/* Letter badge with color-coded cost */}
                   <div
                     style={{ 
                       backgroundColor: getCostColor(it.cost),
@@ -74,9 +94,13 @@ export default function Butterfly() {
                   >
                     {it.letter}
                   </div>
+                  
+                  {/* Frequency percentage */}
                   <div className="small text-muted" style={{ fontSize: '0.7rem' }}>
                     freq: {it.frequency}%
                   </div>
+                  
+                  {/* Cost display */}
                   <div className="small fw-bold" style={{ fontSize: '0.7rem', color: getCostColor(it.cost) }}>
                     💰 {it.cost}
                   </div>
@@ -84,6 +108,7 @@ export default function Butterfly() {
               ))}
             </div>
 
+            {/* Refresh button */}
             <div className="text-center mt-3">
               <Button size="sm" variant="outline-primary" onClick={load}>
                 Refresh
@@ -92,6 +117,7 @@ export default function Butterfly() {
           </>
         )}
 
+        {/* Cost tier legend */}
         <hr className="my-3" />
         <div className="small text-muted text-center" style={{ fontSize: '0.8rem' }}>
           <strong>Cost Tiers:</strong>

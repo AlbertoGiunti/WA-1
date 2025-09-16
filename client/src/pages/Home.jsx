@@ -8,6 +8,7 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   const handleGuestModeClick = () => navigate('/guest');
+  
   const handleNormalModeClick = () => {
     if (user) return navigate('/play');
     return navigate('/login');

@@ -11,7 +11,8 @@ import AbandonMatchModal from './AbandonMatchModal.jsx';
 import Butterfly from './Butterfly.jsx';
 
 /**
- * Game component - Main game orchestrator
+ * Game component - Main game orchestrator that manages the complete game flow
+ * Handles both guest and authenticated user games with proper state management
  * @param {boolean} isGuest - Whether this is a guest game
  */
 export default function Game({ isGuest = false }) {
@@ -19,19 +20,24 @@ export default function Game({ isGuest = false }) {
   const { setCurrentMatch } = useMatchContext();
   const navigate = useNavigate();
   
+  // Component state management
   const [match, setMatch] = useState(null);
   const [message, setMessage] = useState('');
   const [showAbandonModal, setShowAbandonModal] = useState(false);
   const [isHandlingTimeout, setIsHandlingTimeout] = useState(false);
 
-  // Update match state and context
+  /**
+   * Updates both local match state and global match context
+   */
   const updateMatch = useCallback((newMatch) => {
-    // console.log('🔄 Updating match state:', newMatch);
     setMatch(newMatch);
     setCurrentMatch(newMatch);
   }, [setCurrentMatch]);
 
-  // Load current match for authenticated users
+  /**
+   * Loads current match for authenticated users only
+   * Guest users always start fresh games
+   */
   const loadCurrentMatch = useCallback(async () => {
     if (isGuest) return;
     
@@ -43,28 +49,27 @@ export default function Game({ isGuest = false }) {
     }
   }, [updateMatch, isGuest]);
 
-  // Don't auto-load on mount - let users explicitly start games
+  // Note: Don't auto-load on mount - let users explicitly start games
   // This makes guest and authenticated flows consistent
 
-  // Game state calculations
+  // Calculate game state
   const finished = match && (match.status !== 'playing');
 
-  // Timeout handling
+  /**
+   * Handles game timeout with immediate UI update and background server sync
+   */
   const handleTimeout = useCallback(async () => {
     if (!match || isHandlingTimeout) {
-      // console.log('⏸️ Timeout already being handled or no match, skipping');
       return;
     }
 
     setIsHandlingTimeout(true);
     
     // Immediately update local state to reflect timeout
-    // console.log(`🕐 ${isGuest ? 'Guest' : 'User'} timeout for match:`, match.id);
-    // console.log('⚡ Immediately updating local state to lost');
-    
     const timedOutMatch = { ...match, status: 'lost' };
     updateMatch(timedOutMatch);
     
+    // Set appropriate timeout message based on user type
     if (isGuest) {
       setMessage('⏰ Time\'s up! Game Over! In guest mode, no coins are lost.');
     } else {
@@ -72,35 +77,34 @@ export default function Game({ isGuest = false }) {
       setMessage(`⏰ Time's up! Game Over! You lost ${penalty} coins as penalty.`);
     }
 
-    // Then sync with server in background
+    // Sync with server in background to get final game state
     try {
       const updatedMatch = isGuest ? 
         await api.guestCurrent(match.id) : 
         await api.currentMatch();
       
-      // console.log('📥 Server response after timeout:', updatedMatch);
-      
       if (updatedMatch) {
-        // Update with server data (especially if it includes the complete sentence)
         updateMatch(updatedMatch);
         
-        // Sync coins for authenticated users
         if (!isGuest) {
           await syncCoins();
         }
       }
     } catch (err) {
-      console.error('❌ Error syncing with server after timeout:', err);
-      // Keep local state as is if server sync fails
+      console.error('Error syncing with server after timeout:', err);
     } finally {
       setIsHandlingTimeout(false);
     }
   }, [match, isGuest, user?.coins, syncCoins, updateMatch, isHandlingTimeout]);
 
-  // Game actions
+  // Game action handlers
+  
+  /**
+   * Starts a new game for guest or authenticated user
+   */
   const startGame = async () => {
     try {
-      setIsHandlingTimeout(false); // Reset timeout flag for new game
+      setIsHandlingTimeout(false);
       const newMatch = isGuest ? await api.guestStart() : await api.startMatch();
       updateMatch(newMatch);
       setMessage(`${isGuest ? 'Guest match' : 'Match'} started! Good luck! 🍀`);
@@ -113,6 +117,9 @@ export default function Game({ isGuest = false }) {
     }
   };
 
+  /**
+   * Handles letter guessing with appropriate API calls
+   */
   const guessLetter = async (letter) => {
     if (!match || finished) return;
     
@@ -120,9 +127,6 @@ export default function Game({ isGuest = false }) {
       const result = isGuest ? 
         await api.guestGuessLetter(match.id, letter) : 
         await api.guessLetter(match.id, letter);
-      
-      // console.log('🔤 Letter guess result:', result);
-      // console.log('🔤 Match after letter guess:', result.match);
       
       updateMatch(result.match); 
       setMessage(result.message);
@@ -135,6 +139,9 @@ export default function Game({ isGuest = false }) {
     }
   };
 
+  /**
+   * Handles sentence guessing with uppercase conversion
+   */
   const guessSentence = async (sentence) => {
     if (!match || finished) return;
     
@@ -154,10 +161,18 @@ export default function Game({ isGuest = false }) {
     }
   };
 
+  // Modal and navigation handlers
+  
+  /**
+   * Shows the abandon match confirmation modal
+   */
   const handleAbandonClick = () => {
     setShowAbandonModal(true);
   };
 
+  /**
+   * Confirms match abandonment and handles cleanup
+   */
   const confirmAbandon = async () => {
     if (!match || finished) return;
     
@@ -177,36 +192,43 @@ export default function Game({ isGuest = false }) {
     }
   };
 
+  /**
+   * Cancels the abandon action and closes modal
+   */
   const cancelAbandon = () => {
     setShowAbandonModal(false);
   };
 
+  /**
+   * Navigates back to home page and clears match context
+   */
   const goToHome = () => {
     setCurrentMatch(null);
     navigate('/');
   };
 
+  // Render game layout based on current state
   return (
     <Container className="fade-in-up">
       {!match ? (
-        // ReadyToPlay layout with Butterfly between header and ready card
+        // No active match - show ready to play layout
         <Row className="justify-content-center">
           <Col lg={11}>
-            {/* Game Header - Player info, stats */}
+            {/* Player information and game statistics */}
             <GameHeader 
               isGuest={isGuest}
               user={user}
               match={match}
             />
 
-            {/* Butterfly positioned between header and ready card */}
+            {/* Decorative butterfly positioned between header and ready card */}
             <Row className="mb-3">
               <Col>
                 <Butterfly />
               </Col>
             </Row>
 
-            {/* Ready to Play Screen */}
+            {/* Ready to play screen with start game option */}
             <ReadyToPlay 
               isGuest={isGuest}
               onStart={startGame}
@@ -215,18 +237,18 @@ export default function Game({ isGuest = false }) {
           </Col>
         </Row>
       ) : (
-        
+        // Active match - show game interface
         <>
           <Row className="justify-content-center">
             <Col lg={11}>
-              {/* Game Header - Player info, stats */}
+              {/* Player information and current game statistics */}
               <GameHeader 
                 isGuest={isGuest}
                 user={user}
                 match={match}
               />
 
-              {/* Game Interface */}
+              {/* Main game interface with all game controls */}
               <GameInterface 
                 match={match}
                 user={user}
@@ -242,7 +264,7 @@ export default function Game({ isGuest = false }) {
             </Col>
           </Row>
           
-          {/* Butterfly at bottom for game interface */}
+          {/* Decorative butterfly at bottom during gameplay */}
           <Row className="mt-4">
             <Col>
               <Butterfly />
@@ -251,7 +273,7 @@ export default function Game({ isGuest = false }) {
         </>
       )}
 
-      {/* Abandon Confirmation Modal */}
+      {/* Match abandonment confirmation modal */}
       <AbandonMatchModal
         show={showAbandonModal}
         onConfirm={confirmAbandon}

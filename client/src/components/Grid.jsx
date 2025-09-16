@@ -25,14 +25,11 @@ export default function Grid({ mask, spaces, revealed, sentence, finished }) {
     );
   }
 
+  /**
+   * Renders the sentence by grouping letters into words to prevent word breaking
+   * Applies appropriate styling based on letter state (revealed, missing, placeholder)
+   */
   function renderSentence() {
-    if (finished) {
-      // console.log('🎯 Grid rendering finished game:');
-      // console.log('   - Mask:', mask);
-      // console.log('   - Revealed:', revealed);
-      // console.log('   - Sentence:', sentence);
-    }
-    
     // Group letters into words to prevent word breaking
     const words = [];
     let currentWord = [];
@@ -54,37 +51,38 @@ export default function Grid({ mask, spaces, revealed, sentence, finished }) {
         continue;
       }
 
-      // Add letter to current word
+      // Process letter position and determine its display state
       const isRevealed = mask[i] === '1';
       const revealedLetter = Array.isArray(revealed) ? revealed[i] : null;
       const finalLetter = revealedLetter ?? (finished && sentence ? sentence[i] : null);
 
+      // Set CSS classes and content based on letter state
       let className = 'sentence-letter d-inline-flex align-items-center justify-content-center';
       let content = '•';
 
+      // Apply styling based on letter state
       if (finalLetter) {
         content = finalLetter;
         className += isRevealed ? ' guessed' : ' missing';
-      } else if (!finished) {
-        className += ' placeholder';
       } else {
         className += ' placeholder';
       }
 
+      // Add letter element to current word
       currentWord.push(<span key={i} className={className}>{content}</span>);
     }
     
-    // Add final word if exists
+    // Add remaining word to words array if it exists
     if (currentWord.length > 0) {
       words.push({ type: 'word', letters: currentWord });
     }
     
-    // Render words as unbreakable units
+    // Render each word as an unbreakable unit to prevent line breaking
     return words.map((word, index) => {
       if (word.type === 'space') {
         return word.element;
       } else {
-        // Wrap each word in a span with white-space: nowrap to prevent breaking
+        // Wrap word in span with nowrap to prevent breaking mid-word
         return (
           <span key={`word-${index}`} style={{ whiteSpace: 'nowrap', display: 'inline-block' }}>
             {word.letters}
@@ -100,9 +98,12 @@ export default function Grid({ mask, spaces, revealed, sentence, finished }) {
         <h5 className="mb-0">🎮 Guess the Sentence</h5>
       </Card.Header>
       <Card.Body className="py-3">
+        {/* Main sentence display area */}
         <div className="text-center letter-spacing">
           {renderSentence()}
         </div>
+        
+        {/* Helper text for user guidance */}
         <div className="mt-2 text-center text-white">
           <small>
             💡 Click letters below or type the full sentence to guess

@@ -1,10 +1,13 @@
-// server/index.mjs
+/**
+ * Word Guessing Game - Express Server
+ * Main server entry point with authentication, game logic, and API routes
+ */
+
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
 import morgan from 'morgan';
-//import dayjs from 'dayjs';
 import { body, param, validationResult } from 'express-validator';
 
 import { setupPassport } from './auth/auth.mjs';
@@ -20,57 +23,97 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? 'http://localhost:3000';
 
+// Initialize database before starting server
 await initDb();
 
-/* ========= Base middleware ========= */
-app.use(morgan('dev')); // logging HTTP
-app.use(express.json());
-app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
+// ============================================================================
+// MIDDLEWARE CONFIGURATION
+// ============================================================================
+
+app.use(morgan('dev')); // HTTP request logging
+app.use(express.json()); // Parse JSON request bodies
+app.use(cors({ origin: CLIENT_ORIGIN, credentials: true })); // Enable CORS with credentials
+
+// Session configuration with security settings
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-only-secret',
   resave: false,
   saveUninitialized: false,
   cookie: {
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production', // true solo in HTTPS
-    httpOnly: true
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    httpOnly: true // Prevent XSS attacks
   }
 }));
 
+// Passport authentication setup
 setupPassport();
 app.use(passport.initialize());
 app.use(passport.session());
 
-/* ========= Helpers ========= */
+// ============================================================================
+// UTILITY MIDDLEWARE
+// ============================================================================
+
+/**
+ * Middleware to ensure user is authenticated
+ * Returns 401 if user is not logged in
+ */
 function isLoggedIn(req, _res, next) {
   if (req.isAuthenticated()) return next();
   return next({ status: 401, message: 'Not authenticated' });
 }
 
+/**
+ * Middleware to handle express-validator validation errors
+ * Returns 400 with error messages if validation fails
+ */
 function handleValidation(req, res, next) {
   const errors = validationResult(req);
   if (errors.isEmpty()) return next();
   return res.status(400).json({ error: errors.array().map(e => e.msg).join('; ') });
 }
 
-/* ========= Auth Sessions ========= */
+// ============================================================================
+// AUTHENTICATION ROUTES
+// ============================================================================
+
+/**
+ * POST /api/sessions - User login
+ * Authenticates user and returns session data with current coins
+ */
 app.post('/api/sessions', passport.authenticate('local'), async (req, res) => {
   const coins = await getUserCoins(req.user.id);
   req.user.coins = coins;
   res.json({ id: req.user.id, username: req.user.username, coins });
 });
 
+/**
+ * GET /api/sessions/current - Get current authenticated user
+ * Returns user data if authenticated, 401 if not
+ */
 app.get('/api/sessions/current', (req, res) => {
-  if (!req.isAuthenticated()) return   res.status(401).json({ error: 'Not authenticated' });  // res.json(null);
+  if (!req.isAuthenticated()) return res.status(401).json({ error: 'Not authenticated' });
   res.json(req.user);
 });
 
+/**
+ * DELETE /api/sessions/current - User logout
+ * Destroys session and logs out user
+ */
 app.delete('/api/sessions/current', (req, res) => {
   req.logout(() => res.status(204).end());
 });
 
-/* ========= Register ========= */
-// POST /api/users  {username, password}
+// ============================================================================
+// USER REGISTRATION
+// ============================================================================
+
+/**
+ * POST /api/users - Register new user
+ * Creates account with validation and automatically logs in the user
+ * All new users start with 100 coins
+ */
 app.post(
   '/api/users',
   body('username')
@@ -96,12 +139,22 @@ app.post(
   }
 );
 
-/* ========= Utility ========= */
+// ============================================================================
+// GAME UTILITY ROUTES
+// ============================================================================
+
+/**
+ * GET /api/butterfly - Get random letters with frequencies and costs
+ * Returns array of 10 random letters for the butterfly component
+ */
 app.get('/api/butterfly', (_req, res) => {
-  res.json(randomButterfly(10)); // 10 lettere con frequency & cost
+  res.json(randomButterfly(10));
 });
 
-// Endpoint per ottenere i costi delle lettere
+/**
+ * GET /api/letters/costs - Get cost mapping for all letters A-Z
+ * Returns object mapping each letter to its coin cost
+ */
 app.get('/api/letters/costs', (_req, res) => {
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   const costs = {};
@@ -111,11 +164,22 @@ app.get('/api/letters/costs', (_req, res) => {
   res.json(costs);
 });
 
+/**
+ * GET /api/me - Get current user snapshot with updated coins
+ * Lightweight endpoint for frequent coin balance updates
+ */
 app.get('/api/me', isLoggedIn, async (req, res) => {
   res.json({ id: req.user.id, username: req.user.username, coins: req.user.coins });
 });
 
-/* ========= Matches (LOGGED) ========= */
+// ============================================================================
+// AUTHENTICATED USER MATCH ROUTES
+// ============================================================================
+
+/**
+ * POST /api/matches - Start new match for authenticated user
+ * Creates a new game session with timer
+ */
 app.post('/api/matches', isLoggedIn, async (req, res, next) => {
   try {
     const m = await startMatch({ userId: req.user.id, guest: false });
@@ -126,6 +190,10 @@ app.post('/api/matches', isLoggedIn, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+/**
+ * GET /api/matches/current - Get current active match for user
+ * Handles timeout detection and applies penalties automatically
+ */
 app.get('/api/matches/current', isLoggedIn, async (req, res, next) => {
   try {
     const m = await currentMatch(req.user.id);
@@ -136,6 +204,10 @@ app.get('/api/matches/current', isLoggedIn, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+/**
+ * POST /api/matches/:id/guess-letter - Guess a single letter
+ * Validates coin balance, applies costs (doubled if wrong), updates user coins
+ */
 app.post(
   '/api/matches/:id/guess-letter',
   isLoggedIn,
@@ -153,13 +225,18 @@ app.post(
       req.user.coins = u.coins;
       res.json(r);
     } catch (e) {
-      if (e.message && (e.message.includes('Vowel') || e.message.includes('You don\'t have enough coins for this action')))
+      // Handle specific game validation errors
+      if (e.message && (e.message.includes('Vowel') || e.message.includes('Insufficient coins')))
         return res.status(400).json({ error: e.message });
       next(e);
     }
   }
 );
 
+/**
+ * POST /api/matches/:id/guess-sentence - Guess the complete sentence
+ * Win condition: adds 100 coins bonus if correct
+ */
 app.post(
   '/api/matches/:id/guess-sentence',
   isLoggedIn,
@@ -177,6 +254,10 @@ app.post(
   }
 );
 
+/**
+ * POST /api/matches/:id/abandon - Forfeit current match
+ * User loses the match and any potential rewards
+ */
 app.post(
   '/api/matches/:id/abandon',
   isLoggedIn,
@@ -190,7 +271,14 @@ app.post(
   }
 );
 
-/* ========= Matches (GUEST) ========= */
+// ============================================================================
+// GUEST MODE MATCH ROUTES (NO AUTHENTICATION REQUIRED)
+// ============================================================================
+
+/**
+ * POST /api/guest/matches - Start new guest match
+ * No coins required, no authentication needed
+ */
 app.post('/api/guest/matches', async (_req, res, next) => {
   try {
     const m = await startMatch({ userId: null, guest: true });
@@ -198,6 +286,10 @@ app.post('/api/guest/matches', async (_req, res, next) => {
   } catch (e) { next(e); }
 });
 
+/**
+ * GET /api/guest/matches/current/:id - Get specific guest match by ID
+ * Only returns matches that belong to guest users (user_id IS NULL)
+ */
 app.get(
   '/api/guest/matches/current/:id',
   param('id').isInt().withMessage('Invalid match id'),
@@ -213,6 +305,10 @@ app.get(
   }
 );
 
+/**
+ * POST /api/guest/matches/:id/guess-letter - Guest letter guess
+ * No coin costs, no balance validation required
+ */
 app.post(
   '/api/guest/matches/:id/guess-letter',
   param('id').isInt().withMessage('Invalid match id'),
@@ -226,6 +322,7 @@ app.post(
       const r = await guessLetter({ matchId: +req.params.id, userId: null, letter: req.body.letter, isGuestMode: true });
       res.json(r);
     } catch (e) {
+      // Only handle vowel validation errors for guests
       if (e.message && e.message.includes('Vowel'))
         return res.status(400).json({ error: e.message });
       next(e);
@@ -233,6 +330,10 @@ app.post(
   }
 );
 
+/**
+ * POST /api/guest/matches/:id/guess-sentence - Guest sentence guess
+ * No coin rewards for winning
+ */
 app.post(
   '/api/guest/matches/:id/guess-sentence',
   param('id').isInt().withMessage('Invalid match id'),
@@ -246,6 +347,10 @@ app.post(
   }
 );
 
+/**
+ * POST /api/guest/matches/:id/abandon - Guest match abandon
+ * No penalties applied for guests
+ */
 app.post(
   '/api/guest/matches/:id/abandon',
   param('id').isInt().withMessage('Invalid match id'),
@@ -258,7 +363,14 @@ app.post(
   }
 );
 
-/* ========= Error handler ========= */
+// ============================================================================
+// ERROR HANDLING & SERVER STARTUP
+// ============================================================================
+
+/**
+ * Global error handler middleware
+ * Logs server errors and returns appropriate HTTP status codes
+ */
 app.use((err, _req, res, _next) => {
   const status = err.status || 500;
   const message = err.message || 'Server error';
@@ -266,7 +378,9 @@ app.use((err, _req, res, _next) => {
   res.status(status).json({ error: message });
 });
 
-/* ========= Boot ========= */
+/**
+ * Start the Express server
+ */
 app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+  console.log(`Guess a Sentence Server running on http://localhost:${PORT}`);
 });

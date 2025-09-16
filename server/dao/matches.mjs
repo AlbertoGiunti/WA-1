@@ -66,7 +66,6 @@ export async function currentMatch(userId) {
   );
   
   if (expiredMatches.length > 0) {
-    //console.log(`🧹 Cleaning up ${expiredMatches.length} expired matches for user ${userId || 'guest'}`);
     for (const match of expiredMatches) {
       await closeIfTimeout(match);
     }
@@ -91,22 +90,15 @@ export async function cleanupExpiredMatches() {
   const db = await getDb();
   const now = dayjs().unix();
   
-  // console.log('🧹 Cleaning up expired matches...');
-  
-  // Find all expired playing matches
+  // Find all expired playing matches and process them
   const expiredMatches = await db.all(
     `SELECT * FROM matches WHERE status = 'playing' AND ends_at < ?`,
     [now]
   );
   
-  // console.log(`Found ${expiredMatches.length} expired matches to clean up`);
-  
   for (const match of expiredMatches) {
-    // console.log(`🔄 Processing expired match ${match.id} (ended ${now - match.ends_at}s ago)`);
     await closeIfTimeout(match);
   }
-  
-  // console.log('✅ Cleanup completed');
 }
 
 /**
@@ -124,18 +116,9 @@ export async function startMatch({ userId = null, guest = false }) {
   );
   const sentenceU = row.text.toUpperCase();
   
-  // Debug: Print the sentence when starting a match
-  // console.log(`🎮 DEBUG: Starting ${guest ? 'GUEST' : 'PLAY'} match for ${userId ? `user ${userId}` : 'guest'}`);
-  // console.log(`📝 DEBUG: Selected sentence: "${row.text}"`);
-  
   const now = dayjs();
   const ends = now.add(MATCH_SECONDS, 'second');
   const mask = buildMask(sentenceU);
-
-  // console.log(`⏰ DEBUG: Match timing:`);
-  // console.log(`   - Now: ${now.unix()} (${now.format('YYYY-MM-DD HH:mm:ss')})`);
-  // console.log(`   - Ends: ${ends.unix()} (${ends.format('YYYY-MM-DD HH:mm:ss')})`);
-  // console.log(`   - Duration: ${MATCH_SECONDS} seconds`);
 
   const res = await db.run(
     `INSERT INTO matches(user_id, sentence_id, started_at, ends_at, status, revealed_mask, guessed_letters, used_vowel)
@@ -154,41 +137,25 @@ async function closeIfTimeout(m) {
   const db = await getDb();
   const now = dayjs().unix();
   
-  // console.log(`🔍 TIMEOUT CHECK for match ${m.id}:`);
-  // console.log(`   - Status: ${m.status}`);
-  // console.log(`   - Now: ${now} (${dayjs.unix(now).format('YYYY-MM-DD HH:mm:ss')})`);
-  // console.log(`   - Ends at: ${m.ends_at} (${dayjs.unix(m.ends_at).format('YYYY-MM-DD HH:mm:ss')})`);
-  // console.log(`   - Time remaining: ${m.ends_at - now} seconds`);
-  
-  if (m.status !== 'playing') {
-    // console.log(`   ✅ Match not playing, skipping timeout check`);
-    return m;
-  }
-  if (now < m.ends_at) {
-    // console.log(`   ✅ Match still active, no timeout`);
-    return m;
-  }
+  // Skip timeout check if match is not playing or still within time limit
+  if (m.status !== 'playing') return m;
+  if (now < m.ends_at) return m;
 
-  // console.log(`⏰ Match ${m.id} has timed out! Applying penalty...`);
-
+  // Match has timed out - apply penalties and update status
   if (m.user_id) {
-    // Get current user coins from the users table
+    // Apply coin penalty for authenticated users (capped at current balance)
     const currentCoins = await getUserCoins(m.user_id);
     const penalty = Math.min(TIME_PENALTY, currentCoins);
     const newCoins = Math.max(0, currentCoins - penalty);
     
-    // console.log(`💰 User ${m.user_id}: ${currentCoins} → ${newCoins} coins (penalty: ${penalty})`);
-    
     await db.run('UPDATE users SET coins=? WHERE id=?', [newCoins, m.user_id]);
     await db.run('UPDATE matches SET status="lost" WHERE id=?', [m.id]);
   } else {
-    // console.log(`👤 Guest match ${m.id} timed out (no penalty)`);
+    // Guest matches timeout without penalties
     await db.run('UPDATE matches SET status="lost" WHERE id=?', [m.id]);
   }
   
-  const updatedMatch = await db.get('SELECT * FROM matches WHERE id=?', [m.id]);
-  // console.log(`✅ Match ${m.id} status updated to: ${updatedMatch.status}`);
-  return updatedMatch;
+  return await db.get('SELECT * FROM matches WHERE id=?', [m.id]);
 }
 
 /**
@@ -202,19 +169,14 @@ export async function getMatchSafe(m) {
   const s = await db.get('SELECT text FROM sentences WHERE id=?', [m.sentence_id]);
   const sentenceU = s.text.toUpperCase();
 
-  // console.log(`🔤 DEBUG: Full sentence for match ${m.id}: "${s.text}" (${sentenceU})`);
-
+  // Create revealed array: null for spaces, letter if revealed, null if hidden
   const revealed = [...sentenceU].map((ch, i) => {
     if (ch === ' ') return null;                             // spaces always null
     return m.revealed_mask[i] === '1' ? ch : null;           // revealed letter vs not revealed
   });
 
-   // At the end of the game you can show the complete sentence
+  // Show complete sentence only when game is finished (won/lost), not for abandoned matches
   const fullSentence = (m.status !== 'playing' && m.status !== 'abandoned') ? sentenceU : null;
-  
-  if (fullSentence) {
-    // console.log(`🏁 DEBUG: Game finished, revealing full sentence: "${fullSentence}"`);
-  }
 
   const result = {
     id: m.id,
@@ -225,7 +187,7 @@ export async function getMatchSafe(m) {
     usedVowel: !!m.used_vowel,
     spaces: [...sentenceU].map(ch => ch === ' '),
     revealed,
-    sentence: fullSentence  /* Use 'sentence' instead of "fullSentence" for the frontend */
+    sentence: fullSentence  // Complete sentence when game is finished
   };
   
   return result;
@@ -246,6 +208,7 @@ export async function guessLetter({ matchId, userId = null, letter, isGuestMode 
   if (!m || m.status !== 'playing') throw new Error('Match not playable');
   if ((userId ?? null) !== (m.user_id ?? null)) throw new Error('Unauthorized');
 
+  // Check for timeout and update match status if necessary
   let mm = await closeIfTimeout(m);
   if (mm.status !== 'playing') return { match: await getMatchSafe(mm), message: 'Time over.' };
 
@@ -258,34 +221,35 @@ export async function guessLetter({ matchId, userId = null, letter, isGuestMode 
 
   const cost = letterCost(L);
   const present = S.includes(L);
-  const effectiveCost = (present ? cost : cost * 2);
+  const effectiveCost = (present ? cost : cost * 2);  // Double cost for wrong guesses
   let penalty;
   
-  // Coin management - get current user coins
+  // Coin validation and deduction for authenticated users
   let newCoins = null;
   if (mm.user_id) {
     const currentCoins = await getUserCoins(mm.user_id);
-    if (currentCoins <= 0) throw new Error("You don\'t have enough coins for this action");
     
-    // Check if user has enough coins for the minimum cost (before knowing if letter is present)
+    // Validate user has enough coins for the base cost
     if (currentCoins < cost) {
       throw new Error(`Insufficient coins! You need at least ${cost} coins to guess this letter, but you only have ${currentCoins}.`);
     }
 
+    // Calculate actual penalty (may be less than effective cost if user doesn't have enough)
     if (currentCoins < effectiveCost){
-      penalty = currentCoins;
+      penalty = currentCoins;  // Take all remaining coins if not enough for full penalty
     }else {
-      penalty = effectiveCost;
+      penalty = effectiveCost;  // Full penalty
     }
     newCoins = Math.max(0, currentCoins - penalty);
   }
 
+  // Update revealed mask if letter is present in sentence
   let newMask = mm.revealed_mask;
   if (present) newMask = revealMask(S, newMask, L);
 
+  // Check if all letters have been revealed (win condition)
   const won = isAllRevealed(newMask, S);
   let status = mm.status;
-  //let message = present ? 'Letter revealed.' : 'Letter not present (cost doubled).';
 
   let message;
   if (present) {
@@ -309,15 +273,18 @@ export async function guessLetter({ matchId, userId = null, letter, isGuestMode 
     }
   }
 
+  // Update guessed letters list (remove duplicates)
   const newGuessed = (mm.guessed_letters + L)
     .split('').filter((v,i,a)=>a.indexOf(v)===i).join('');
 
+  // Update match state in database
   await db.run(
     `UPDATE matches SET revealed_mask=?, guessed_letters=?, used_vowel=?, status=?
      WHERE id=?`,
     [newMask, newGuessed, (mm.used_vowel || isVowel) ? 1 : 0, status, mm.id]
   );
 
+  // Update user coins if applicable
   if (mm.user_id && newCoins !== null) await db.run('UPDATE users SET coins=? WHERE id=?', [newCoins, mm.user_id]);
 
   const updated = await db.get('SELECT * FROM matches WHERE id=?', [mm.id]);
@@ -339,6 +306,7 @@ export async function guessSentence({ matchId, userId = null, sentence, isGuestM
   if (!m || m.status !== 'playing') throw new Error('Match not playable');
   if ((userId ?? null) !== (m.user_id ?? null)) throw new Error('Unauthorized');
 
+  // Check for timeout and update match status if necessary
   let mm = await closeIfTimeout(m);
   if (mm.status !== 'playing') return { match: await getMatchSafe(mm), message: 'Time over.' };
 
@@ -350,13 +318,13 @@ export async function guessSentence({ matchId, userId = null, sentence, isGuestM
   let status = mm.status;
   let message = 'Wrong sentence. Keep trying!';
 
-  // Coin management - get current user coins
+  // Handle coin rewards and status updates for correct guesses
   let newCoins = null;
   if (ok) {
-    newMask = [...S].map(_ => '1').join('');
+    newMask = [...S].map(_ => '1').join('');  // Reveal entire sentence
     status = 'won';
     
-    // Different messages for guest vs authenticated users
+    // Different rewards for guest vs authenticated users
     if (!isGuestMode && mm.user_id) {
       message = 'Correct sentence! You gained +100 coins!';
       const currentCoins = await getUserCoins(mm.user_id);
@@ -366,10 +334,13 @@ export async function guessSentence({ matchId, userId = null, sentence, isGuestM
     }
   }
 
+  // Update match state in database
   await db.run(
     'UPDATE matches SET revealed_mask=?, status=? WHERE id=?',
     [newMask, status, mm.id]
   );
+  
+  // Update user coins if applicable
   if (mm.user_id && newCoins !== null) await db.run('UPDATE users SET coins=? WHERE id=?', [newCoins, mm.user_id]);
 
   const updated = await db.get('SELECT * FROM matches WHERE id=?', [mm.id]);

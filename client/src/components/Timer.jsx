@@ -2,14 +2,16 @@ import { useMemo, useEffect, useRef } from 'react';
 import useTick from '../hooks/useTick.js';
 
 /**
- * Timer component - Manages game timer display and logic
- * @param {Object} match - Current match object
- * @param {Function} onTimeUp - Callback when time runs out
+ * Timer component that displays and manages the game countdown timer
+ * Handles timeout detection and triggers appropriate callbacks when time expires
+ * @param {Object} match - Current match object containing timing information
+ * @param {Function} onTimeUp - Callback function triggered when timer reaches zero
  */
 export default function Timer({ match, onTimeUp }) {
   const now = useTick(500, match && match.status === 'playing');
   const timeoutHandled = useRef(false);
   
+  // Calculate remaining seconds based on match end time
   const secondsLeft = useMemo(() => {
     if (!match) return null;
     return Math.max(0, match.endsAt - Math.floor(now / 1000));
@@ -17,28 +19,33 @@ export default function Timer({ match, onTimeUp }) {
 
   const timeUp = secondsLeft === 0;
   
-  // Reset timeout flag when match changes or is not finished
+  // Reset timeout handling flag when match changes or game is not active
   useEffect(() => {
     if (!timeUp || !match || match.status !== 'playing') {
       timeoutHandled.current = false;
     }
   }, [timeUp, match]);
   
-  // Call onTimeUp callback when time runs out (only once)
+  // Trigger timeout callback when time expires (only once per match)
   useEffect(() => {
     if (timeUp && match && match.status === 'playing' && onTimeUp && !timeoutHandled.current) {
-      // console.log('⏰ Timer: Calling onTimeUp (first time)');
       timeoutHandled.current = true;
       onTimeUp();
     }
-  }, [timeUp, match?.id, match?.status]); // Removed onTimeUp from dependencies
+  }, [timeUp, match?.id, match?.status]);
 
+  /**
+   * Formats seconds into MM:SS format
+   * @param {number} seconds - Seconds to format
+   * @returns {string} Formatted time string
+   */
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Don't render if no active match
   if (!match) return null;
 
   return (

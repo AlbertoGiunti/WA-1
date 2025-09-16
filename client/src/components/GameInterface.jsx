@@ -7,17 +7,19 @@ import GameControls from './GameControls.jsx';
 import Timer from './Timer.jsx';
 
 /**
- * GameInterface component - Displays the main game interface
- * @param {Object} match - Current match object
- * @param {Object} user - Current user object (contains coins info)
- * @param {boolean} finished - Whether the game is finished
- * @param {boolean} isGuest - Whether this is guest mode
- * @param {string} message - Game message to display
- * @param {Function} onGuessLetter - Callback for letter guess
- * @param {Function} onGuessSentence - Callback for sentence guess
- * @param {Function} onAbandon - Callback for abandon action
- * @param {Function} onGoHome - Callback for going home
- * @param {Function} onTimeUp - Callback when time runs out
+ * GameInterface component - Main game interface during active gameplay
+ * Renders all game elements including grid, keyboard, timer, and controls
+ * 
+ * @param {Object} match - Current match object with game state
+ * @param {Object} user - Current user object (contains coins info for authenticated users)
+ * @param {boolean} finished - Whether the game has ended (won/lost/abandoned)
+ * @param {boolean} isGuest - Whether this is guest mode (affects cost display and validation)
+ * @param {string} message - Game feedback message to display to user
+ * @param {Function} onGuessLetter - Callback for letter guess attempts
+ * @param {Function} onGuessSentence - Callback for full sentence guess attempts
+ * @param {Function} onAbandon - Callback for abandon match action
+ * @param {Function} onGoHome - Callback for returning to home page
+ * @param {Function} onTimeUp - Callback when game timer expires
  */
 export default function GameInterface({ 
   match, 
@@ -31,58 +33,44 @@ export default function GameInterface({
   onGoHome,
   onTimeUp
 }) {
+  // Early return if no match data available
   if (!match) return null;
 
-  // Build revealed letters array based on mask and sentence
+  /**
+   * Builds the revealed letters array for the Grid component
+   * Handles different scenarios: finished games, ongoing games, and fallback cases
+   * Returns array of characters (revealed) or null (hidden) for each position
+   */
   const revealedLetters = useMemo(() => {
-    // console.log('🔍 useMemo buildRevealedLetters called:');
-    // console.log('   - finished:', finished);
-    // console.log('   - match.revealed:', match.revealed);
-    // console.log('   - match.revealedMask:', match.revealedMask);
-    // console.log('   - match.sentence:', match.sentence);
-    // console.log('   - match.fullSentence:', match.fullSentence);
-    
-    // Get the sentence from match (needed for building from mask or when finished)
     const sentence = match.sentence || match.fullSentence;
     
-    // If match is finished AND we have the complete sentence, always show it
-    // This allows Grid to color letters correctly (green for guessed, red for missing)
+    // For finished games with complete sentence: show all letters for proper coloring
+    // Grid will color letters green (guessed) or red (missed) based on mask
     if (finished && sentence) {
-      // console.log('🎯 Match finished with sentence, revealing complete sentence');
-      // console.log('   - Sentence:', sentence);
-      // console.log('   - Mask:', match.revealedMask);
-      // console.log('   - Status:', match.status);
       return sentence.split('');
     }
     
-    // During gameplay, try to use the revealed array from server first
+    // During active gameplay: use server-provided revealed array if available
     if (match.revealed && Array.isArray(match.revealed)) {
-      // console.log('✅ Using revealed array from server:', match.revealed);
       return match.revealed;
     }
     
-    // Fallback: build from mask during gameplay (if no revealed array from server)
+    // Fallback: construct revealed array from mask and sentence
     if (sentence && match.revealedMask) {
-      // console.log('🏗️ Building revealed array from mask and sentence');
       const revealed = [];
       for (let i = 0; i < match.revealedMask.length; i++) {
-        if (match.revealedMask[i] === '1') {
-          revealed[i] = sentence[i];
-        } else {
-          revealed[i] = null;
-        }
+        revealed[i] = match.revealedMask[i] === '1' ? sentence[i] : null;
       }
-      // console.log('   - Built revealed array:', revealed);
       return revealed;
     }
     
-    // console.log('❌ No usable data available for revealed letters');
+    // No usable data available
     return null;
-  }, [match.sentence, match.fullSentence, match.revealed, match.revealedMask, match.status, finished]);
+  }, [match.sentence, match.fullSentence, match.revealed, match.revealedMask, finished]);
 
   return (
     <>
-      {/* Game Message */}
+      {/* Game Status Message - displays feedback, errors, and game results */}
       {message && (
         <Alert 
           variant={
@@ -96,7 +84,7 @@ export default function GameInterface({
         </Alert>
       )}
 
-      {/* Game Grid */}
+      {/* Sentence Display Grid - shows revealed and hidden letters */}
       <Grid 
         mask={match.revealedMask} 
         spaces={match.spaces} 
@@ -106,14 +94,17 @@ export default function GameInterface({
         className="mb-4"
       />
 
-      {/* Timer, Guess Sentence Input and Game Controls */}
+      {/* Game Controls Row - timer, sentence input, and action buttons */}
       <Row className="mb-3 justify-content-center align-items-center">
+        {/* Game Timer */}
         <Col md={2}>
           <Timer 
             match={match} 
             onTimeUp={onTimeUp}
           />
         </Col>
+        
+        {/* Full Sentence Guess Input */}
         <Col md={6}>
           <GuessSentence 
             disabled={finished} 
@@ -121,6 +112,8 @@ export default function GameInterface({
             compact={true}
           />
         </Col>
+        
+        {/* Game Action Controls (abandon, home) */}
         <Col md={2}>
           <GameControls 
             match={match}
@@ -131,7 +124,7 @@ export default function GameInterface({
         </Col>
       </Row>
 
-      {/* Virtual Keyboard */}
+      {/* Virtual Keyboard - letter selection interface */}
       <Row className="mb-4 justify-content-center">
         <Col>
           <Keyboard 
@@ -139,8 +132,8 @@ export default function GameInterface({
             guessed={new Set(match.guessedLetters || [])} 
             usedVowel={match.usedVowel}
             disabled={finished}
-            showCosts={!isGuest} // Only show costs for authenticated users
-            userCoins={isGuest ? null : user?.coins} // Pass user coins for validation
+            showCosts={!isGuest} // Show letter costs only for authenticated users
+            userCoins={isGuest ? null : user?.coins} // Enable coin validation for authenticated users
           />
         </Col>
       </Row>

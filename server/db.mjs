@@ -25,7 +25,7 @@ export async function initDb() {
     CREATE TABLE IF NOT EXISTS sentences(
       id INTEGER PRIMARY KEY,
       text TEXT NOT NULL,
-      is_guest INTEGER NOT NULL DEFAULT 0
+      is_guest INTEGER NOT NULL DEFAULT 0 CHECK (is_guest IN (0, 1))
     );
 
     CREATE TABLE IF NOT EXISTS matches(
@@ -34,10 +34,10 @@ export async function initDb() {
       sentence_id INTEGER NOT NULL,
       started_at INTEGER NOT NULL,
       ends_at INTEGER NOT NULL,
-      status TEXT NOT NULL,
+      status TEXT NOT NULL CHECK (status IN ('playing', 'won', 'lost', 'abandoned')),
       revealed_mask TEXT NOT NULL,
       guessed_letters TEXT NOT NULL,
-      used_vowel INTEGER NOT NULL DEFAULT 0,
+      used_vowel INTEGER NOT NULL DEFAULT 0 CHECK (used_vowel IN (0, 1)),
       FOREIGN KEY(user_id) REFERENCES users(id),
       FOREIGN KEY(sentence_id) REFERENCES sentences(id)
     );
@@ -46,9 +46,9 @@ export async function initDb() {
   const cntUsers = (await db.get('SELECT COUNT(*) as c FROM users')).c;
   if (cntUsers === 0) {
     const seed = [
-      { username: 'testuser150', coins: 150, password: 'pwd' },
-      { username: 'testuser0', coins: 0,    password: 'pwd' },
-      { username: 'testuser45', coins: 45,  password: 'pwd' }
+      { username: 'testuser150', coins: 150, password: 'testpwd' },
+      { username: 'testuser0', coins: 0,    password: 'testpwd' },
+      { username: 'testuser45', coins: 45,  password: 'testpwd' }
     ];
     for (const u of seed) {
       const salt = crypto.randomBytes(16).toString('hex');

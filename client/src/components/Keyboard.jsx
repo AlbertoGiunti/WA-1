@@ -2,10 +2,16 @@ import { Card, Row, Col } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 import { getLetterCosts } from '../api.js';
 
+// Constants for letter management
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const VOWELS = new Set(['A', 'E', 'I', 'O', 'U']);
 
-// Function to get color based on cost - Uses CSS variables for consistency
+/**
+ * Gets the appropriate color for a letter based on its cost
+ * Uses CSS variables for consistent theming across the application
+ * @param {number} cost - The cost of the letter
+ * @returns {string} The hex color code for the letter background
+ */
 function getCostColor(cost) {
   const root = document.documentElement;
   switch (cost) {
@@ -19,10 +25,21 @@ function getCostColor(cost) {
   }
 }
 
+/**
+ * Virtual keyboard component for letter guessing
+ * Displays letters with costs, handles coin validation, and manages letter selection
+ * @param {Set} guessed - Set of already guessed letters
+ * @param {boolean} usedVowel - Whether a vowel has been used in this match
+ * @param {boolean} disabled - Whether the keyboard is disabled
+ * @param {Function} onPick - Callback when a letter is selected
+ * @param {boolean} showCosts - Whether to display letter costs (default: true)
+ * @param {number|null} userCoins - User's current coin count for validation
+ */
 export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCosts = true, userCoins = null }) {
   const [letterCosts, setLetterCosts] = useState({});
   const [loading, setLoading] = useState(true);
 
+  // Fetch letter costs from API on component mount
   useEffect(() => {
     const fetchLetterCosts = async () => {
       try {
@@ -30,13 +47,13 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
         setLetterCosts(costs);
       } catch (error) {
         console.error('Failed to fetch letter costs:', error);
-        // Fallback to default costs if API fails
+        // Generate fallback costs if API fails
         const fallbackCosts = {};
         LETTERS.forEach(letter => {
           if (VOWELS.has(letter)) {
             fallbackCosts[letter] = 10;
           } else {
-            // Approximate costs for consonants
+            // Approximate costs for consonants based on frequency
             const tier5 = new Set(['T','N','S','H','R']);
             const tier4 = new Set(['D','L','C']);
             const tier3 = new Set(['U','M','W','F']);
@@ -57,6 +74,11 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
     fetchLetterCosts();
   }, []);
 
+  /**
+   * Renders a single letter button with appropriate styling and interaction
+   * @param {string} letter - The letter to render
+   * @returns {JSX.Element} The letter button component
+   */
   const renderLetter = (letter) => {
     const isGuessed = guessed.has(letter);
     const isVowel = VOWELS.has(letter);
@@ -64,14 +86,14 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
     const hasInsufficientCoins = userCoins !== null && userCoins < cost;
     const canPick = !disabled && !isGuessed && (!isVowel || !usedVowel) && !hasInsufficientCoins;
     
-    // Calculate color based on cost
+    // Calculate styling based on letter state
     const backgroundColor = getCostColor(cost);
     const isDisabled = !canPick || isGuessed;
 
     return (
       <Col key={letter} xs={2} sm={2} md={1} className="mb-2">
         <div
-          className={`letter-badge w-100 p-2 text-center`}
+          className="letter-badge w-100 p-2 text-center"
           onClick={() => canPick && onPick(letter)}
           style={{
             backgroundColor: isDisabled ? '#e9ecef' : backgroundColor,
@@ -110,12 +132,7 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
             <small style={{ fontSize: '0.7rem' }}>
               {cost}💰
             </small>
-          )} {/*
-          {hasInsufficientCoins && (
-            <small style={{ fontSize: '0.6rem', color: '#dc3545' }}>
-              ❌
-            </small>
-          )} */}
+          )}
         </div>
       </Col>
     );
@@ -134,9 +151,12 @@ export default function Keyboard({ guessed, usedVowel, disabled, onPick, showCos
           </div>
         ) : (
           <>
+            {/* Letter grid layout */}
             <Row className="g-1">
               {LETTERS.map(renderLetter)}
             </Row>
+            
+            {/* Cost legend and user feedback */}
             <div className="mt-3 text-center">
               <small className="text-white">
                 💰 Letter costs: 

@@ -105,7 +105,7 @@ export default function LoginPage() {
               <div className="mt-3 text-center">
                 <small style={{ color: 'var(--text-secondary)' }}>
                   <strong>Demo users:</strong> testuser150, testuser0, testuser45<br/>
-                  <strong>Password:</strong> pwd
+                  <strong>Password:</strong> testpwd
                 </small>
               </div>
             </Card.Body>
