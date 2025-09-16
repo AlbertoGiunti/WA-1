@@ -20,8 +20,19 @@ export function AuthProvider({ children }) {
    * @param {string} password - User's password
    */
   const login = async (username, password) => {
-    const u = await api.login(username, password);
-    setUser(u);
+    try {
+      const u = await api.login(username, password);
+      setUser(u);
+    } catch (error) {
+      // Provide more specific error messages
+      if (error.status === 401) {
+        throw new Error('Invalid username or password');
+      } else if (error.status >= 500) {
+        throw new Error('Server error. Please try again later');
+      } else {
+        throw new Error('Login failed. Please check your credentials');
+      }
+    }
   };
 
   /**
@@ -30,16 +41,35 @@ export function AuthProvider({ children }) {
    * @param {string} password - User's password
    */
   const register = async (username, password) => {
-    const u = await api.register(username, password);
-    setUser(u);
+    try {
+      const u = await api.register(username, password);
+      setUser(u);
+    } catch (error) {
+      // Provide specific error messages for registration
+      if (error.status === 409) {
+        throw new Error('Username already exists. Please choose another');
+      } else if (error.status === 400) {
+        throw new Error('Invalid input. Please check your username and password');
+      } else if (error.status >= 500) {
+        throw new Error('Server error. Please try again later');
+      } else {
+        throw new Error('Registration failed. Please try again');
+      }
+    }
   };
 
   /**
    * Logs out the current user and clears user state
    */
   const logout = async () => {
-    await api.logout();
-    setUser(null);
+    try {
+      await api.logout();
+      setUser(null);
+    } catch (error) {
+      // Even if logout fails on server, clear local state
+      setUser(null);
+      // Don't throw error for logout failures - they're not critical
+    }
   };
 
   /**
@@ -60,7 +90,7 @@ export function AuthProvider({ children }) {
   // Check authentication status on component mount
   useEffect(() => {
     const ctrl = new AbortController();
-    refresh(ctrl.signal);
+    refresh(ctrl.signal); 
     return () => ctrl.abort();
   }, [refresh]);
 

@@ -22,7 +22,9 @@ async function http(path, options = {}) {
   if (!res.ok) {
     let msg = 'Request failed';
     try { const j = await res.json(); msg = j.error || msg; } catch {}
-    throw new Error(msg);
+    const error = new Error(msg);
+    error.status = res.status;
+    throw error;
   }
   return res.status === 204 ? null : res.json();
 }
